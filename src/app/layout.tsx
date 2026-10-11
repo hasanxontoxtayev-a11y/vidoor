@@ -10,19 +10,19 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://vidoor.vercel.app"),
   title: {
-    default: "⚡ Vidoor — VidIQ Bepul Muqobili | YouTube Daromad va Analitika",
+    default: "⚡ Vidoor — YouTube Daromad va Professional Analitika",
     template: "%s | Vidoor ⚡",
   },
   description: "Dunyo va O'zbekiston bo'ylab barcha YouTube kanallar daromadi, 7 kunlik ko'rishlari, video chiqarish vaqtlari va AI izohlar yordamchisi. 100% bepul, limitsiz va API kalitsiz.",
   keywords: [
     "vidoor",
-    "vidiq",
-    "vidiq bepul muqobili",
+    "vidoor app",
+    "vidoor analytics",
+    "vidoor daromad",
     "youtube daromad hisoblash",
     "youtube kanal tahlili",
     "youtube oylik daromad",
     "youtube statistika uzbek",
-    "vidiq extension uzbekcha",
     "kunuz daromadi",
     "mittivine daromadi",
     "youtube rpm hisoblash",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "uz_UZ",
     url: "https://vidoor.vercel.app",
-    title: "⚡ Vidoor — VidIQ Bepul Muqobili & YouTube Analitika",
+    title: "⚡ Vidoor — YouTube Daromad va Professional Analitika",
     description: "Istalgan YouTube kanalning oylik daromadi va jonli statistikasini 1 soniyada bepul bilib oling.",
     siteName: "Vidoor",
     images: [
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "⚡ Vidoor — VidIQ Bepul Muqobili & YouTube Analitika",
+    title: "⚡ Vidoor — YouTube Daromad va Professional Analitika",
     description: "YouTube kanallar daromadi, 7 kunlik ko'rishlari va eng maqbul video vaqti tahlili.",
     images: ["/og-image.jpg"],
   },
@@ -86,7 +86,7 @@ export default function RootLayout({
   const webAppSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Vidoor - VidIQ Bepul Muqobili & YouTube Analitika",
+    "name": "Vidoor — YouTube Daromad va Professional Analitika",
     "url": "https://vidoor.vercel.app",
     "applicationCategory": "BusinessApplication, MultimediaApplication",
     "operatingSystem": "All",
@@ -122,7 +122,7 @@ export default function RootLayout({
         "name": "Vidoor nima va qanday ishlaydi?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vidoor — bu VidIQ ning 100% bepul muqobili bo'lib, butun dunyo va O'zbekistondagi YouTube kanallarning haqiqiy oylik daromadi, 7 kunlik ko'rishlar oqimi va eng maqbul video yuklash vaqtlarini tahlil qiluvchi platforma.",
+          "text": "Vidoor — bu butun dunyo va O'zbekistondagi YouTube kanallarning haqiqiy oylik daromadi, 7 kunlik ko'rishlar oqimi va eng maqbul video yuklash vaqtlarini aniq tahlil qiluvchi 100% bepul platforma.",
         },
       },
       {
@@ -138,12 +138,12 @@ export default function RootLayout({
         "name": "Kun.uz va Mittivine kanallari qancha daromad topadi?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vidoor tahliliga ko'ra, Kun.uz oylik daromadi taxminan 107.4 ming $, Mittivine oylik daromadi esa 22.3 ming $ ni tashkil qiladi (VidIQ ko'rsatkichlari bilan 100% bir xil).",
+          "text": "Vidoor tahliliga ko'ra, Kun.uz oylik daromadi taxminan 107.4 ming $, Mittivine oylik daromadi esa 22.3 ming $ ni tashkil qiladi.",
         },
       },
       {
         "@type": "Question",
-        "name": "Chrome brauzerida VidIQ kabi qanday foydalanish mumkin?",
+        "name": "Chrome brauzerida Vidoordan qanday foydalanish mumkin?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Vidoor saytidan 1 bosishda '⚡ Vidoor Tahlil' xatcho'pini Chrome xatcho'plar paneliga sudrab qo'yish yoki tayyor Chrome kengaytmasini (Extension) o'rnatish orqali YouTube'dagi istalgan sahifadan to'g'ridan-to'g'ri tahlil qilish mumkin.",

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Vidoor — VidIQ Bepul Muqobili & YouTube Analitika',
+    name: 'Vidoor — YouTube Analitika & Daromad Platformasi',
     short_name: 'Vidoor',
     description: "YouTube kanallar daromadi, 7 kunlik ko'rishlari va eng maqbul video yuklash vaqtini tahlil qiluvchi 100% bepul platforma.",
     start_url: '/',

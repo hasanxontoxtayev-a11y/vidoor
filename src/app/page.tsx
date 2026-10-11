@@ -44,7 +44,7 @@ export default function HomePage() {
   const [selectedChannel, setSelectedChannel] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [activeTab, setActiveTab] = useState<"vidiq" | "timing" | "videos" | "comments">("vidiq");
+  const [activeTab, setActiveTab] = useState<"overview" | "timing" | "videos" | "comments">("overview");
   const [comments, setComments] = useState<any[]>([]);
 
   // AI Izoh Yordamchisi uchun maxsus izoh sinovi
@@ -172,11 +172,15 @@ export default function HomePage() {
   // O'z kanalini ulash
   const handleConnectMyChannel = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!myChannelLink.trim()) return;
+    if (!myChannelLink.trim()) {
+      setErrorMsg("Iltimos, kanal nomini yoki havolasini kiriting.");
+      return;
+    }
 
     setIsLoading(true);
+    setErrorMsg("");
     try {
-      const res = await fetch(`/api/youtube?query=${encodeURIComponent(myChannelLink)}`);
+      const res = await fetch(`/api/youtube?query=${encodeURIComponent(myChannelLink.trim())}`);
       const data = await res.json();
 
       if (data.error) {
@@ -191,17 +195,22 @@ export default function HomePage() {
         localStorage.setItem("vidoor_connected_channel", JSON.stringify(data));
       }
       setIsLoading(false);
-    } catch {
+    } catch (e: any) {
+      setErrorMsg("Kanal ma'lumotlarini yuklashda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
       setIsLoading(false);
     }
   };
 
   // Google hisobi orqali avtomatik ulash
   const handleAutoConnectGoogle = async (queryToUse?: string) => {
-    const q = (queryToUse || googleChannelInput || "kunuz").trim();
-    if (!q) return;
+    const q = (queryToUse || googleChannelInput || myChannelLink).trim();
+    if (!q) {
+      setErrorMsg("Iltimos, Google hisobingizdagi YouTube kanal nomini yoki havolasini kiriting.");
+      return;
+    }
 
     setIsLoading(true);
+    setErrorMsg("");
     try {
       const res = await fetch(`/api/youtube?query=${encodeURIComponent(q)}`);
       const data = await res.json();
@@ -220,7 +229,7 @@ export default function HomePage() {
       setShowGoogleModal(false);
       setIsLoading(false);
     } catch (e: any) {
-      setErrorMsg("Google ulanishda xatolik: " + e.message);
+      setErrorMsg("Google ulanishda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
       setIsLoading(false);
     }
   };
@@ -287,7 +296,7 @@ export default function HomePage() {
                 Vidoor <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500 text-white font-bold tracking-normal">AI</span>
               </span>
               <span className="hidden sm:inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                VidIQ Standarti • 100% Bepul
+                Professional Analitika • 100% Bepul
               </span>
             </div>
           </div>
@@ -360,18 +369,18 @@ export default function HomePage() {
 
               <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs sm:text-sm font-bold mb-6 shadow-sm">
                 <Flame className="w-4 h-4 text-orange-500" />
-                <span>VidIQ Quick Stats standartidagi 100% aniq oylik daromad va statistika</span>
+                <span>Vidoor Quick Stats — 100% aniq oylik daromad va jonli analitika</span>
               </div>
 
               <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-tight">
                 YouTube kanallarning haqiqiy oylik daromadi va{" "}
                 <span className="bg-gradient-to-r from-emerald-600 to-orange-500 bg-clip-text text-transparent">
-                  VidIQ ko'rsatkichlari
+                  jonli statistikasi
                 </span>
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                VidIQ kabi aniq 7 kunlik ko'rishlar oqimi, obunachilar va 1 oylik sof daromad (masalan: <strong>22.3 ming $</strong> / <strong>19k$ - 25k$</strong>). Kanal nomini yozing va aniq ko'ring!
+                Barcha kanallar bo'yicha aniq 7 kunlik ko'rishlar oqimi, obunachilar va 1 oylik sof daromad (masalan: <strong>22.3 ming $</strong> / <strong>19k$ - 25k$</strong>). Kanal nomini yozing va bir zumda ko'ring!
               </p>
 
               {/* Qidiruv formasi */}
@@ -430,7 +439,7 @@ export default function HomePage() {
                   </button>
                 </div>
 
-                {/* 1-Click Tezkor Kirish Banneri (VidIQ kabi har qanday joydan tortib olish) */}
+                {/* 1-Click Tezkor Kirish Banneri (Har qanday joydan 1-bosishda tortib olish) */}
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                   <button
                     type="button"
@@ -440,7 +449,7 @@ export default function HomePage() {
                     <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span>⚡ Chrome & YouTube'dan 1-bosishda tortib olish</span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[11px] font-black border border-emerald-500/30">
-                      VidIQ usulida
+                      1-Bosishda Tezkor
                     </span>
                   </button>
 
@@ -457,7 +466,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* HAQIQIY VIDIQ DARAJASIDAGI NATIJA PANELI */}
+          {/* HAQIQIY VIDOOR NATIJA PANELI */}
           {selectedChannel && (
             <section id="analysis-results" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
               {/* Kanal Asosiy Kartasi */}
@@ -522,14 +531,15 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* VIDIQ QUICK CHANNEL STATS WIDGETI (Skrinshotdagi bilan 100% bir xil) */}
+              {/* VIDOOR QUICK CHANNEL STATS WIDGETI */}
               <div className="bg-[#0f172a] text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl font-black tracking-tight text-white flex items-center">
-                      <span className="text-sky-400">vid</span>IQ
+                  <div className="flex items-center space-x-2.5">
+                    <img src="/vidoor-emblem.jpg" alt="Vidoor" className="w-7 h-7 rounded-lg object-cover shadow border border-emerald-500/40" />
+                    <span className="text-xl font-black tracking-wider text-white flex items-center">
+                      <span className="text-emerald-400">VID</span><span className="text-orange-500">OOR</span>
                     </span>
-                    <span className="text-sm font-bold text-slate-300 ml-2">Quick channel stats</span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-300 ml-2 border-l border-slate-700 pl-2.5">Quick Channel Stats</span>
                   </div>
 
                   <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
@@ -538,7 +548,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* 5 ta VidIQ Kartasi */}
+                {/* 5 ta Vidoor Kartasi */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {/* 1. Views gained (7 days) */}
                   <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
@@ -609,7 +619,7 @@ export default function HomePage() {
                     <span>{selectedChannel.aiInsight}</span>
                   </div>
                   <span className="text-emerald-400 font-bold whitespace-nowrap bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                    VidIQ Algorithm ✓
+                    Vidoor Algorithm ✓
                   </span>
                 </div>
               </div>
@@ -617,9 +627,9 @@ export default function HomePage() {
               {/* Tabs */}
               <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
                 <button 
-                  onClick={() => setActiveTab("vidiq")}
+                  onClick={() => setActiveTab("overview")}
                   className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${
-                    activeTab === "vidiq"
+                    activeTab === "overview"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm"
                       : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                   }`}
@@ -668,7 +678,7 @@ export default function HomePage() {
               {/* Tab Contenti */}
               <div>
                 {/* 1. OYLIK DAROMAD METRIKALARI */}
-                {activeTab === "vidiq" && (
+                {activeTab === "overview" && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
@@ -960,15 +970,22 @@ export default function HomePage() {
 
               <div>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
-                  ⚡ VidIQ uslubidagi 1-Bosishda Ulanish
+                  ⚡ Vidoor 1-Bosishda Avtomatik Ulanish
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
                   Google Hisobidagi YouTube Kanalni Ulang
                 </h2>
                 <p className="text-slate-600 text-sm mt-2 max-w-lg mx-auto leading-relaxed">
-                  Saytga kirganingizda Google hisobingizdagi YouTube kanalingiz avtomatik eslab qolinadi va har safar qayta yozmasdan barcha oylik daromad, yuklash soatlari va izohlar VidIQ kabi bir zumda ochiladi.
+                  Saytga kirganingizda Google hisobingizdagi YouTube kanalingiz avtomatik eslab qolinadi va har safar qayta yozmasdan barcha oylik daromad, yuklash soatlari va izohlar bir zumda avtomatik ochiladi.
                 </p>
               </div>
+
+              {errorMsg && (
+                <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-xs font-semibold text-red-700 flex items-center justify-center space-x-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
               {/* 1-Bosishda Google Ulanish Tugmasi */}
               <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 text-left space-y-4 shadow-xl">
@@ -1083,14 +1100,15 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* VidIQ Quick channel stats Vidjeti (Shaxsiy Kanal uchun) */}
+              {/* Vidoor Quick channel stats Vidjeti (Shaxsiy Kanal uchun) */}
               <div className="bg-[#0f172a] text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl font-black tracking-tight text-white flex items-center">
-                      <span className="text-sky-400">vid</span>IQ
+                  <div className="flex items-center space-x-2.5">
+                    <img src="/vidoor-emblem.jpg" alt="Vidoor" className="w-7 h-7 rounded-lg object-cover shadow border border-emerald-500/40" />
+                    <span className="text-xl font-black tracking-wider text-white flex items-center">
+                      <span className="text-emerald-400">VID</span><span className="text-orange-500">OOR</span>
                     </span>
-                    <span className="text-sm font-bold text-slate-300 ml-2">Quick channel stats (Kanalingiz ko'rsatkichlari)</span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-300 ml-2 border-l border-slate-700 pl-2.5">Quick Channel Stats (Kanalingiz ko'rsatkichlari)</span>
                   </div>
 
                   <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
@@ -1259,11 +1277,11 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-8 mt-6">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-          <p>© 2026 Vidoor. VidIQ va SocialBlade darajasidagi bepul tahlil platformasi. Barcha huquqlar himoyalangan.</p>
+          <p>© 2026 Vidoor. YouTube kanallar uchun professional va bepul analitika platformasi. Barcha huquqlar himoyalangan.</p>
         </div>
       </footer>
 
-      {/* 4. MODAL: CHROME VA TEZKOR KIRISH (VIDIQ KABI HAR QANDAY JOYDAN TORTIB OLISH) */}
+      {/* 4. MODAL: CHROME VA TEZKOR KIRISH */}
       {showExtensionModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
@@ -1275,7 +1293,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-white">
-                    VidIQ kabi har qanday joydan tortib olish
+                    Har qanday sahifadan 1-bosishda tahlil qilish
                   </h3>
                   <p className="text-xs text-slate-300">
                     Chrome, Google va YouTube sahifalaridan 1 bosishda oson kirish
@@ -1385,7 +1403,7 @@ export default function HomePage() {
                     <ol className="list-decimal list-inside space-y-1 text-slate-300">
                       <li>YouTube'da xohlagan kanalni, videoni yoki Shorts'ni tomosha qiling.</li>
                       <li>Chrome'ning yuqori panelidagi <strong>"⚡ Vidoor Tahlil"</strong> xatcho'pini 1 marta bosing.</li>
-                      <li>Darhol Vidoor ochiladi va shu kanalning barcha oylik daromadi, 7 kunlik ko'rishlari va VidIQ statistikasini tortib oladi!</li>
+                      <li>Darhol Vidoor ochiladi va shu kanalning barcha oylik daromadi, 7 kunlik ko'rishlari va to'liq statistikasini tortib oladi!</li>
                     </ol>
                   </div>
                 </div>
@@ -1433,9 +1451,9 @@ export default function HomePage() {
                           <p className="font-semibold text-slate-100">Ma'lumotlarni kiriting:</p>
                           <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-400 text-[11px]">Nom (Name): <strong className="text-white">Vidoor ⚡ (VidIQ)</strong></span>
+                              <span className="text-slate-400 text-[11px]">Nom (Name): <strong className="text-white">Vidoor ⚡ Analytics</strong></span>
                               <button
-                                onClick={() => handleCopy("Vidoor ⚡ (VidIQ)", "copy-name")}
+                                onClick={() => handleCopy("Vidoor ⚡ Analytics", "copy-name")}
                                 className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 text-[10px] font-bold cursor-pointer"
                               >
                                 {copiedId === "copy-name" ? "Nusxalandi! ✓" : "Nusxalash"}
@@ -1475,7 +1493,7 @@ export default function HomePage() {
                     <Puzzle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <h4 className="text-sm font-black text-orange-900">
-                        VidIQ kabi Chrome Kengaytmasi (Extension)
+                        Vidoor Chrome Kengaytmasi (Extension)
                       </h4>
                       <p className="text-xs text-orange-800 mt-1 leading-relaxed">
                         Chrome brauzeringizga doimiy kengaytma sifatida qo'shib qo'ying va har safar YouTube'da turganingizda 1 bosishda mini-oynadan foydalaning.
@@ -1622,7 +1640,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900">Google / YouTube Ulanishi</h3>
-                  <p className="text-xs text-slate-500">VidIQ uslubida avtomatik hisob integratsiyasi</p>
+                  <p className="text-xs text-slate-500">Vidoor avtomatik hisob integratsiyasi</p>
                 </div>
               </div>
 
@@ -1636,6 +1654,13 @@ export default function HomePage() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-5">
+              {errorMsg && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start space-x-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-emerald-950 leading-relaxed">

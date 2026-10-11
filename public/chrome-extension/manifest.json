@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Vidoor — YouTube Analitika & VidIQ Muqobili",
+  "name": "Vidoor — YouTube Daromad va Analitika Platformasi",
   "version": "1.0.0",
   "description": "YouTube kanallar daromadi, 7 kunlik ko'rishlari va statistikasini 1 bosishda ko'rsatuvchi bepul kengaytma",
   "permissions": ["activeTab"],
