@@ -24,9 +24,9 @@ Davom etish uchun sun'iy intellekt yordamchingizga **"keyingi qadam"** deb yozis
 ---
 
 ## Step 2 — Bosh sahifa va qulay boshqaruv paneli (Dashboard UI)
-- [ ] Qidiruv maydoni: YouTube kanalining linkini yoki nomini kiritish paneli.
-- [ ] Yashil va oranje ranglar uyg'unligidagi zamonaviy kartalar, menyular va tugmalar.
-- [ ] Namuna (mock) sifatida bitta kanalning chiroyli statistikasini ekranga chiqarish.
+- [x] Qidiruv maydoni: YouTube kanalining linkini yoki nomini kiritish paneli.
+- [x] Yashil va oranje ranglar uyg'unligidagi zamonaviy kartalar, menyular va tugmalar.
+- [x] Namuna (mock) sifatida bitta kanalning chiroyli statistikasini ekranga chiqarish.
 **Nimani o'rganasiz:** Komponentlar nima va zamonaviy veb-sahifa qanday qismlarga bo'linadi.  
 **Qanday tekshirasiz:** Saytda kanal qidirish maydoniga nom yozib ko'rasiz va chiroyli dizayndagi natija kartalarini ko'rasiz.
 
