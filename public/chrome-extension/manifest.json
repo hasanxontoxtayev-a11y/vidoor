@@ -1,9 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Vidoor — YouTube Daromad va Analitika Platformasi",
-  "version": "1.0.0",
-  "description": "YouTube kanallar daromadi, 7 kunlik ko'rishlari va statistikasini 1 bosishda ko'rsatuvchi bepul kengaytma",
-  "permissions": ["activeTab"],
+  "version": "1.1.0",
+  "description": "YouTube sahifasida kanallarning haqiqiy oylik daromadi, 7 kunlik ko'rishlari va Quick Stats ko'rsatkichlarini avtomatik ko'rsatuvchi kengaytma",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "https://vidoor.vercel.app/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Vidoor Tahlil"

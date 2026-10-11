@@ -1616,28 +1616,32 @@ export default function HomePage() {
                   {/* Drag Button */}
                   <div className="text-center p-6 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center space-y-2">
                     <span className="text-xs font-bold text-slate-500">
-                      Ushbu tugmani Xatcho'plar paneliga sudrab qo'ying 👇
+                      Ushbu tugmani Xatcho'plar paneliga sudrab qo'ying (yoki bosing) 👇
                     </span>
                     <a
-                      href="javascript:(function(){var u=window.location.href;window.open('https://vidoor.vercel.app/?q='+encodeURIComponent(u),'_blank');})();"
-                      onClick={(e) => e.preventDefault()}
+                      href="javascript:(function(){var s=document.createElement('script');s.src='https://vidoor.vercel.app/vidoor-inpage.js?t='+Date.now();document.body.appendChild(s);})();"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigator.clipboard.writeText("javascript:(function(){var s=document.createElement('script');s.src='https://vidoor.vercel.app/vidoor-inpage.js?t='+Date.now();document.body.appendChild(s);})();");
+                        alert("Xatcho'p kodi nusxalandi! Endi Chrome xatcho'plariga qo'shib, YouTube'da (masalan, Xamdam Sobirov sahifasida) bosing!");
+                      }}
                       draggable="true"
                       className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-sm shadow-lg shadow-emerald-600/30 cursor-grab active:cursor-grabbing hover:scale-105 transition"
                     >
                       <Zap className="w-4 h-4 fill-white" />
-                      <span>⚡ Vidoor Tahlil</span>
+                      <span>⚡ YouTube'da Vidoor Vidjetini Chiqarish (1-Bosishda)</span>
                     </a>
                     <span className="text-[11px] text-slate-400">
-                      (Yoki o'ng tugmani bosib: "Bookmark link" / "Xatcho'pga qo'shish"ni tanlang)
+                      (Xatcho'pga qo'shib, YouTube'da 1 marta bossangiz — darhol sahifada Vidoor vidjeti chiqadi!)
                     </span>
                   </div>
 
                   <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl text-xs space-y-2 border border-slate-800">
                     <span className="font-bold text-orange-400 block">Qanday ishlaydi?</span>
                     <ol className="list-decimal list-inside space-y-1 text-slate-300">
-                      <li>YouTube'da xohlagan kanalni, videoni yoki Shorts'ni tomosha qiling.</li>
-                      <li>Chrome'ning yuqori panelidagi <strong>"⚡ Vidoor Tahlil"</strong> xatcho'pini 1 marta bosing.</li>
-                      <li>Darhol Vidoor ochiladi va shu kanalning barcha oylik daromadi, 7 kunlik ko'rishlari va to'liq statistikasini tortib oladi!</li>
+                      <li>YouTube'da istalgan kanalni (masalan, <em>Xamdam Sobirov</em> yoki <em>Setanta Sports</em>) oching.</li>
+                      <li>Chrome'ning yuqori panelidagi <strong>"⚡ Vidoor Vidjeti"</strong> xatcho'pini 1 marta bosing.</li>
+                      <li>Hech qanday saytga o'tmasdan, xuddi 2-rasmdagidek to'g'ridan-to'g'ri YouTube sahifasining ichida <strong>VIDOOR Quick channel stats</strong> kartochkasi paydo bo'ladi!</li>
                     </ol>
                   </div>
                 </div>
@@ -1720,17 +1724,17 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* TAB 3: CHROME EXTENSION */}
+              {/* TAB 3: CHROME EXTENSION (YOUTUBE ICHIDA AVTOMATIK KO'RSATISH) */}
               {extensionTab === "extension" && (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200 flex items-start space-x-3">
-                    <Puzzle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 flex items-start space-x-3">
+                    <Youtube className="w-6 h-6 text-red-600 fill-red-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-black text-orange-900">
-                        Vidoor Chrome Kengaytmasi (Extension)
+                      <h4 className="text-sm font-black text-slate-900">
+                        Vidoor Chrome Kengaytmasi: YouTube Sahifasining O'zida Avtomatik Chiqadi!
                       </h4>
-                      <p className="text-xs text-orange-800 mt-1 leading-relaxed">
-                        Chrome brauzeringizga doimiy kengaytma sifatida qo'shib qo'ying va har safar YouTube'da turganingizda 1 bosishda mini-oynadan foydalaning.
+                      <p className="text-xs text-slate-700 mt-1 leading-relaxed">
+                        <strong>Nega 2-rasmda ko'rindi, 1-rasmda yo'q?</strong> Chunki 2-rasmda Chrome kengaytmasi YouTube sahifasiga ulangan. Ushbu kengaytmani Chrome'ga o'rnatgach, xuddi 2-rasmdagidek istalgan kanalga (Xamdam Sobirov, Setanta Sports va h.k.) kirganingizda <strong>VIDOOR Quick channel stats</strong> va <strong>"View channel stats"</strong> tugmasi to'g'ridan-to'g'ri YouTube sahifasida avtomatik chiqadi!
                       </p>
                     </div>
                   </div>
@@ -1739,28 +1743,35 @@ export default function HomePage() {
                     <a
                       href="/vidoor-chrome-extension.zip"
                       download="vidoor-chrome-extension.zip"
-                      className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-sm shadow-lg shadow-orange-500/30 hover:opacity-95 transition"
+                      className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 text-white font-black text-sm shadow-xl shadow-red-600/30 hover:opacity-95 transition transform hover:-translate-y-0.5"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>📥 vidoor-chrome-extension.zip ni yuklab olish (Bepul)</span>
+                      <Download className="w-5 h-5" />
+                      <span>📥 vidoor-chrome-extension.zip ni yuklab olish (100% Bepul)</span>
                     </a>
                   </div>
 
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2.5">
-                    <span className="font-bold text-slate-800 block">O'rnatish 3 qadamda:</span>
-                    <div className="space-y-2 text-slate-600">
-                      <div className="flex items-start space-x-2">
-                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
-                        <span>Yuklab olingan <strong>vidoor-chrome-extension.zip</strong> faylini arxivdan chiqaring (Extract).</span>
+                  <div className="bg-slate-900 text-slate-200 p-5 rounded-2xl border border-slate-800 text-xs space-y-3">
+                    <span className="font-bold text-emerald-400 block uppercase tracking-wider">
+                      Chrome'ga O'rnatish (Faqat 10 soniya):
+                    </span>
+                    <div className="space-y-2.5 text-slate-300">
+                      <div className="flex items-start space-x-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-[11px] border border-emerald-500/30">1</span>
+                        <span>Yuklab olingan <strong>vidoor-chrome-extension.zip</strong> faylini sichqonchaning o'ng tugmasi bilan bosib arxivdan chiqaring (<strong>Extract to vidoor-chrome-extension</strong>).</span>
                       </div>
-                      <div className="flex items-start space-x-2">
-                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
-                        <span>Chrome brauzerida manzil qatoriga <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono text-emerald-700">chrome://extensions</code> deb yozing va o'ng yuqoridagi <strong>"Developer mode"</strong> (Dasturchi rejimi)ni yoqing.</span>
+                      <div className="flex items-start space-x-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-[11px] border border-emerald-500/30">2</span>
+                        <span>Chrome brauzerida manzil qatoriga <code className="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded font-mono">chrome://extensions</code> deb yozing va o'ng yuqoridagi <strong>"Developer mode"</strong> (Dasturchi rejimi) kalitini yoqing.</span>
                       </div>
-                      <div className="flex items-start space-x-2">
-                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">3</span>
-                        <span>Chap yuqoridagi <strong>"Load unpacked"</strong> (Paketsiz yuklash) tugmasini bosing va arxivdan chiqarilgan papkani tanlang — kengaytma Chrome'ingizda tayyor bo'ladi!</span>
+                      <div className="flex items-start space-x-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-[11px] border border-emerald-500/30">3</span>
+                        <span>Chap yuqoridagi <strong>"Load unpacked"</strong> (Paketsiz yuklash) tugmasini bosing va arxivdan chiqarilgan papkani tanlang.</span>
                       </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-[11px] flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                      <span>Tayyor! Endi YouTube'dagi har qanday kanalni (Xamdam Sobirov, Kunuz) ochganingizda Vidoor avtomatik chiqadi!</span>
                     </div>
                   </div>
                 </div>

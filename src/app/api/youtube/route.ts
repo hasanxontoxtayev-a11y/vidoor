@@ -61,36 +61,64 @@ export async function GET(request: Request) {
 
       if (chRes.status === 200) {
         const chHtml = await chRes.text();
-        const chJson = chHtml.match(/var ytInitialData = ({[\s\S]*?});<\/script>/);
+
+        // Meta teglar orqali aniqlash
+        const ogTitle = chHtml.match(/<meta property="og:title" content="([^"]+)"/i);
+        if (ogTitle && ogTitle[1] && targetTitle === clean) {
+          targetTitle = ogTitle[1];
+        }
+        const ogImg = chHtml.match(/<meta property="og:image" content="([^"]+)"/i);
+        if (ogImg && ogImg[1] && !targetAvatar) {
+          targetAvatar = ogImg[1];
+        }
+        const handleMatch = chHtml.match(/\/(@[a-zA-Z0-9_.-]+)/);
+        if (handleMatch && handleMatch[1] && targetHandle.startsWith('@UC')) {
+          targetHandle = handleMatch[1];
+        }
+
+        const chJson = chHtml.match(/(?:var ytInitialData|ytInitialData)\s*=\s*({[\s\S]*?});<\/script>/);
 
         if (chJson) {
-          const data = JSON.parse(chJson[1]);
-          targetTitle = data?.metadata?.channelMetadataRenderer?.title || targetTitle;
-          targetId = data?.metadata?.channelMetadataRenderer?.externalId || targetId;
-          const av = data?.metadata?.channelMetadataRenderer?.avatar?.thumbnails?.[0]?.url;
-          if (av && !targetAvatar) targetAvatar = av.startsWith('//') ? `https:${av}` : av;
+          try {
+            const data = JSON.parse(chJson[1]);
+            targetTitle = data?.metadata?.channelMetadataRenderer?.title || 
+                          data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.title?.dynamicTextViewModel?.text?.content || 
+                          targetTitle;
+            targetId = data?.metadata?.channelMetadataRenderer?.externalId || targetId;
+            const vanity = data?.metadata?.channelMetadataRenderer?.vanityChannelUrl;
+            if (vanity && targetHandle.startsWith('@UC')) {
+              targetHandle = vanity.replace(/.*\/@/, '@');
+            }
+            const av = data?.metadata?.channelMetadataRenderer?.avatar?.thumbnails?.[0]?.url;
+            if (av && !targetAvatar) targetAvatar = av.startsWith('//') ? `https:${av}` : av;
 
-          const header = data?.header?.pageHeaderRenderer || data?.header?.c4TabbedHeaderRenderer;
-          const rows = header?.content?.pageHeaderViewModel?.metadata?.contentMetadataViewModel?.metadataRows || [];
+            const header = data?.header?.pageHeaderRenderer || data?.header?.c4TabbedHeaderRenderer;
+            const rows = header?.content?.pageHeaderViewModel?.metadata?.contentMetadataViewModel?.metadataRows || [];
 
-          for (const row of rows) {
-            for (const part of row.metadataParts || []) {
-              const text = part?.text?.content || '';
-              if (/subscribers?|obunachi|подписчик/i.test(text)) {
-                subs = text.replace(/subscribers?|obunachi|подписчик[а-я]*/gi, '').trim();
-              } else if (/videos?|video|видео/i.test(text)) {
-                const vClean = text.replace(/videos?|video|видео/gi, '').trim();
-                totalVideos = vClean + " ta video";
-                if (vClean.toLowerCase().includes('k')) {
-                  rawTotalVideos = Math.round(parseFloat(vClean.replace(/[^0-9.]/g, '')) * 1000);
-                } else if (vClean.toLowerCase().includes('m')) {
-                  rawTotalVideos = Math.round(parseFloat(vClean.replace(/[^0-9.]/g, '')) * 1000000);
-                } else {
-                  rawTotalVideos = parseInt(vClean.replace(/[^0-9]/g, '')) || 50;
+            for (const row of rows) {
+              for (const part of row.metadataParts || []) {
+                const text = part?.text?.content || '';
+                if (/subscribers?|obunachi|подписчик/i.test(text)) {
+                  subs = text.replace(/subscribers?|obunachi|подписчик[а-я]*/gi, '').trim();
+                } else if (/videos?|video|видео/i.test(text)) {
+                  const vClean = text.replace(/videos?|video|видео/gi, '').trim();
+                  totalVideos = vClean + " ta video";
+                  if (vClean.toLowerCase().includes('k')) {
+                    rawTotalVideos = Math.round(parseFloat(vClean.replace(/[^0-9.]/g, '')) * 1000);
+                  } else if (vClean.toLowerCase().includes('m')) {
+                    rawTotalVideos = Math.round(parseFloat(vClean.replace(/[^0-9.]/g, '')) * 1000000);
+                  } else {
+                    rawTotalVideos = parseInt(vClean.replace(/[^0-9]/g, '')) || 50;
+                  }
                 }
               }
             }
-          }
+          } catch (pe) {}
+        }
+
+        if (subs === "Noma'lum") {
+          const subRegex = chHtml.match(/([0-9.,]+(?:\s*[KMBkmb]|млн|тыс|ming|mln)?)\s*(?:subscribers|подписчик|obunachi)/i);
+          if (subRegex) subs = subRegex[1].trim();
         }
       }
     } catch (e: any) {
@@ -98,7 +126,7 @@ export async function GET(request: Request) {
     }
 
     // STRATEGY 2: Agar to'g'ridan-to'g'ri topilmasa, YouTube Search orqali qidirish
-    if (!targetId) {
+    if (!targetId || targetTitle === clean || subs === "Noma'lum") {
       try {
         const searchQuery = clean.replace(/^@/, '');
         // 2a. Avval kanallar bo'yicha qidirish

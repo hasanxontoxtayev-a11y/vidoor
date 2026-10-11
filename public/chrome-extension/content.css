@@ -1,0 +1,221 @@
+/* Vidoor YouTube In-Page Styles */
+.vidoor-injected-container {
+  width: 100% !important;
+  max-width: 1280px !important;
+  margin: 12px auto 16px auto !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  font-family: "Roboto", "Segoe UI", Arial, sans-serif !important;
+  z-index: 99 !important;
+}
+
+.vidoor-card {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 16px !important;
+  padding: 16px 20px !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.vidoor-card:hover {
+  border-color: #334155 !important;
+}
+
+.vidoor-card-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 14px !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+
+.vidoor-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.vidoor-logo-img {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  object-fit: cover !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+
+.vidoor-logo-text {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.5px !important;
+  color: #ffffff !important;
+}
+
+.vidoor-logo-text .vid {
+  color: #10b981 !important;
+}
+
+.vidoor-logo-text .oor {
+  color: #f97316 !important;
+}
+
+.vidoor-header-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #e2e8f0 !important;
+  margin-left: 6px !important;
+  border-left: 1px solid #334155 !important;
+  padding-left: 10px !important;
+}
+
+.vidoor-view-all-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  padding: 5px 12px !important;
+  border-radius: 20px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.vidoor-view-all-btn:hover {
+  background: rgba(56, 189, 248, 0.2) !important;
+  color: #7dd3fc !important;
+  border-color: #38bdf8 !important;
+}
+
+.vidoor-stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 900px) {
+  .vidoor-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 550px) {
+  .vidoor-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.vidoor-stat-box {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 85px !important;
+}
+
+.vidoor-stat-box.highlight {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.9)) !important;
+  border: 1.5px solid #10b981 !important;
+}
+
+.vidoor-stat-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #94a3b8 !important;
+  text-transform: capitalize !important;
+}
+
+.vidoor-stat-box.highlight .vidoor-stat-label {
+  color: #34d399 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.vidoor-stat-value {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  margin-top: 4px !important;
+  line-height: 1.2 !important;
+}
+
+.vidoor-stat-box.highlight .vidoor-stat-value {
+  color: #34d399 !important;
+  font-size: 20px !important;
+}
+
+.vidoor-stat-sub {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  margin-top: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.vidoor-badge-green {
+  color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+.vidoor-badge-red {
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+.vidoor-badge-rank {
+  color: #94a3b8 !important;
+}
+
+/* Header Action Button (View channel stats) */
+.vidoor-header-stats-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 8px 16px !important;
+  border-radius: 24px !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin-left: 8px !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+  z-index: 10 !important;
+}
+
+.vidoor-header-stats-btn:hover {
+  background: linear-gradient(135deg, #0369a1, #075985) !important;
+  transform: translateY(-1px) !important;
+}
+
+.vidoor-loader {
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 50% !important;
+  border-top-color: #ffffff !important;
+  animation: vidoor-spin 0.8s linear infinite !important;
+}
+
+@keyframes vidoor-spin {
+  to { transform: rotate(360deg); }
+}
