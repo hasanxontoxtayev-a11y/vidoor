@@ -81,7 +81,7 @@ export default function HomePage() {
 
   // Google bilan avtomatik ulanish
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleChannelInput, setGoogleChannelInput] = useState("@VeloraRBX");
+  const [googleChannelInput, setGoogleChannelInput] = useState("");
 
   // Chrome Kengaytmasi va Tezkor Kirish modali
   const [showExtensionModal, setShowExtensionModal] = useState(false);
@@ -113,10 +113,18 @@ export default function HomePage() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setMyChannelData(parsed);
-          setSelectedChannel(parsed);
-          setMyChannelConnected(true);
-          runChannelDiagnostics(parsed);
+          // Agar avvalgi testdan qolib ketgan Velora bo'lsa darhol tozalash
+          if (parsed && (parsed.name?.toLowerCase().includes("velora") || parsed.handle?.toLowerCase().includes("velora"))) {
+            localStorage.removeItem("vidoor_connected_channel");
+            localStorage.removeItem("vidoor_user_gmail");
+            setMyChannelData(null);
+            setMyChannelConnected(false);
+          } else {
+            setMyChannelData(parsed);
+            setSelectedChannel(parsed);
+            setMyChannelConnected(true);
+            runChannelDiagnostics(parsed);
+          }
         } catch (e) {}
       }
 
@@ -229,14 +237,20 @@ export default function HomePage() {
 
   // Google (Gmail) orqali 1-bosishda avtomatik YouTube kanalga ulanish
   const handleConnectGmail = async (emailInput?: string) => {
-    const email = (emailInput || userGmail || "blogger@gmail.com").trim().toLowerCase();
+    const rawInput = (emailInput || userGmail || myChannelLink || searchQuery || "").trim();
+    if (!rawInput) {
+      setErrorMsg("Iltimos, o'z kanalingiz nomini yoki Google hisobingizni (Gmail) kiriting.");
+      return;
+    }
+
+    const email = rawInput.toLowerCase();
     setIsLoading(true);
     setIsGmailConnecting(true);
     setErrorMsg("");
 
     try {
-      // 1. Kiritilgan Gmail orqali tegishli kanalni topish
-      let channelTarget = "@VeloraRBX";
+      // 1. Kiritilgan nom yoki Gmail orqali tegishli kanalni aniqlash
+      let channelTarget = rawInput;
       if (email.includes("xamdam") || email.includes("sobirov")) {
         channelTarget = "@XamdamSobirov_Official";
       } else if (email.includes("setanta")) {
@@ -249,24 +263,23 @@ export default function HomePage() {
         channelTarget = "@texnoplov";
       } else if (email.includes("subyektiv")) {
         channelTarget = "@subyektiv";
-      } else if (email.includes("@")) {
+      } else if (email.includes("@") && email.endsWith("@gmail.com")) {
         const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
-        channelTarget = prefix.length >= 3 ? prefix : "@VeloraRBX";
-      } else if (email.length > 0) {
-        channelTarget = email;
+        channelTarget = prefix.length >= 2 ? `@${prefix}` : rawInput;
       }
 
       const res = await fetch(`/api/youtube?query=${encodeURIComponent(channelTarget)}`);
       const data = await res.json();
 
-      let finalData = data;
       if (data.error) {
-        const fbRes = await fetch(`/api/youtube?query=@VeloraRBX`);
-        finalData = await fbRes.json();
+        setErrorMsg("Kanal topilmadi (" + data.error + "). Iltimos nomini to'g'ri yozib qayta urinib ko'ring.");
+        setIsLoading(false);
+        setIsGmailConnecting(false);
+        return;
       }
 
-      setMyChannelData(finalData);
-      setSelectedChannel(finalData);
+      setMyChannelData(data);
+      setSelectedChannel(data);
       setMyChannelConnected(true);
       setGmailConnected(true);
       const cleanEmail = email.includes("@") ? email : `${email}@gmail.com`;
@@ -274,15 +287,15 @@ export default function HomePage() {
 
       if (typeof window !== "undefined") {
         localStorage.setItem("vidoor_user_gmail", cleanEmail);
-        localStorage.setItem("vidoor_connected_channel", JSON.stringify(finalData));
+        localStorage.setItem("vidoor_connected_channel", JSON.stringify(data));
       }
 
       // Avtomatik AI Diagnostikani ishga tushirish
-      runChannelDiagnostics(finalData);
+      runChannelDiagnostics(data);
       setShowGoogleModal(false);
       setIsLoading(false);
     } catch (e: any) {
-      setErrorMsg("Google ulanishda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
+      setErrorMsg("Ulanishda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
       setIsLoading(false);
     } finally {
       setIsGmailConnecting(false);
@@ -300,23 +313,34 @@ export default function HomePage() {
     handleConnectGmail(myChannelLink.trim());
   };
 
-  // Google hisobi orqali avtomatik ulash (1-bosishda, xatosiz)
+  // Google hisobi orqali avtomatik ulash
   const handleAutoConnectGoogle = async (queryToUse?: string) => {
-    handleConnectGmail(queryToUse || googleChannelInput || "@VeloraRBX");
+    if (queryToUse) {
+      handleConnectGmail(queryToUse);
+    } else if (googleChannelInput.trim()) {
+      handleConnectGmail(googleChannelInput.trim());
+    } else {
+      handleConnectGmail("kunuz");
+    }
   };
 
-  // Kanalni uzish / Boshqa hisobga o'tish
+  // Kanalni uzish / Boshqa hisobga o'tish (To'liq tozalash)
   const handleDisconnectChannel = () => {
     setMyChannelConnected(false);
     setMyChannelData(null);
     setGmailConnected(false);
     setUserGmail("");
+    setMyChannelLink("");
     setDiagnosticsData(null);
     setAiCustomAdvice("");
     if (typeof window !== "undefined") {
       localStorage.removeItem("vidoor_connected_channel");
       localStorage.removeItem("vidoor_user_gmail");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("q");
+      window.history.replaceState({}, "", url.pathname);
     }
+    setViewMode("myChannel");
   };
 
   // Nusxalash funksiyasi
@@ -404,18 +428,35 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center space-x-2">
-            {myChannelConnected && myChannelData && (
-              <a
-                href={myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}` : `https://www.youtube.com`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
-                title="YouTube'da kanalni ochish"
+            {myChannelConnected && myChannelData ? (
+              <div className="flex items-center space-x-1.5">
+                <a
+                  href={myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}` : `https://www.youtube.com`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  title="YouTube'da kanalni ochish"
+                >
+                  <Youtube className="w-3.5 h-3.5 fill-white" />
+                  <span className="truncate max-w-[120px]">{myChannelData.name}</span>
+                  <ExternalLink className="w-3 h-3 ml-0.5" />
+                </a>
+                <button
+                  onClick={handleDisconnectChannel}
+                  className="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-500 text-xs font-bold border border-slate-200 transition cursor-pointer"
+                  title="Kanalni uzish (Chiqish)"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setViewMode("myChannel")}
+                className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-dashed border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold transition cursor-pointer"
               >
-                <Youtube className="w-3.5 h-3.5 fill-white" />
-                <span className="truncate max-w-[120px]">{myChannelData.name}</span>
-                <ExternalLink className="w-3 h-3 ml-0.5" />
-              </a>
+                <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>+ Kanalni Ulash</span>
+              </button>
             )}
             <button
               onClick={() => { setShowExtensionModal(true); setExtensionTab("bookmarklet"); }}
@@ -544,12 +585,12 @@ export default function HomePage() {
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
-                      { email: "velora@gmail.com", label: "VELORA (50.6K)", channel: "@VeloraRBX" },
                       { email: "xamdam.sobirov@gmail.com", label: "Xamdam Sobirov (1.38M)", channel: "@XamdamSobirov_Official" },
-                      { email: "kunuz@gmail.com", label: "Kun.uz (2.1M)", channel: "@kunuz" },
-                      { email: "mittivine@gmail.com", label: "MittiVine (3.2M)", channel: "@mittivine" },
+                      { email: "kunuz@gmail.com", label: "Kun.uz (4.18M)", channel: "@kunuz" },
+                      { email: "mittivine@gmail.com", label: "MittiVine (2.21M)", channel: "@mittivine" },
                       { email: "texnoplov@gmail.com", label: "Texnoplov (410K)", channel: "@texnoplov" },
                       { email: "subyektiv@gmail.com", label: "Subyektiv (890K)", channel: "@subyektiv" },
+                      { email: "mrbeast@gmail.com", label: "MrBeast (300M+)", channel: "@mrbeast" },
                     ].map((acc) => (
                       <button
                         key={acc.email}
@@ -1361,13 +1402,13 @@ export default function HomePage() {
                 </div>
                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>⚡ 1-Bosishda YouTube Avtomatik Integratsiyasi</span>
+                  <span>⚡ YouTube Kanalga 1-Bosishda Avtomatik Ulanish</span>
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  YouTube Kanalga 1-Bosishda Ulanish
+                  O'z YouTube Kanalingizni Vidoor-ga Ulang
                 </h2>
                 <p className="text-slate-600 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
-                  Hech qanday murakkab kalit yoki parollarsiz o'z kanalingizni yoki istalgan boshqa kanalni ulang. Barcha ko'rsatkichlar va jonli videolar darhol YouTube bilan bog'lanadi.
+                  Kanal nomingiz, @taxallusingiz yoki havolani kiriting — Vidoor AI darhol kanalingizni ulaydi, daromadini hisoblaydi va nega ko'tarilmayotganini ko'rsatib beradi.
                 </p>
               </div>
 
@@ -1378,76 +1419,67 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* 1. ASOSIY: Google Hisobidagi Kanalga 1-Bosishda Ulanish */}
+              {/* 1. ASOSIY KANAL ULASH SHAKLI */}
               <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 text-white shadow-2xl space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm">
-                      <svg className="w-6 h-6" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
-                        <span>Google / YouTube Hisobi</span>
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                          Tavsiya etiladi
-                        </span>
-                      </h3>
-                      <p className="text-xs text-slate-400">Brauzeringizdagi faol kanal: <strong className="text-white">VELORA (@VeloraRBX • 50.6K)</strong></p>
-                    </div>
-                  </div>
-
-                  <span className="text-[11px] font-semibold text-emerald-400 hidden sm:inline-flex items-center gap-1">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Tayyor
+                <div className="space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    <span>O'z kanalingizni kiriting:</span>
                   </span>
+                  <p className="text-xs text-slate-400">
+                    YouTube'dagi har qanday kanal nomini yoki @taxallusini yozing
+                  </p>
                 </div>
 
-                {/* 1-BOSISHDA ULASH TUGMASI */}
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => handleAutoConnectGoogle("@VeloraRBX")}
-                  className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-red-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 cursor-pointer group disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      <span className="text-base font-black">YouTube Kanalga Ulanmoqda...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Youtube className="w-6 h-6 fill-white flex-shrink-0 group-hover:scale-110 transition" />
-                      <span className="text-base sm:text-lg font-black tracking-wide">
-                        🔴 YouTube Kanalga 1-Bosishda Avtomatik Ulanish
-                      </span>
-                    </>
-                  )}
-                </button>
-                <p className="text-center text-[11px] text-slate-400">
-                  Ushbu tugmani bosish orqali kanalingiz darhol xatosiz ulanadi va brauzeringizda saqlanadi.
-                </p>
+                <form onSubmit={handleConnectMyChannel} className="space-y-3">
+                  <div className="relative">
+                    <Youtube className="w-5 h-5 text-red-500 absolute left-4 top-3.5" />
+                    <input 
+                      type="text" 
+                      value={myChannelLink}
+                      onChange={(e) => setMyChannelLink(e.target.value)}
+                      placeholder="Masalan: Xamdam Sobirov, Kun.uz, @mittivine yoki o'z kanalingiz..."
+                      className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 font-bold text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-red-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 cursor-pointer disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        <span className="text-base font-black">Kanalga Ulanmoqda...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Youtube className="w-6 h-6 fill-white" />
+                        <span className="text-base sm:text-lg font-black tracking-wide">
+                          🔴 Kanalingizni 1-Bosishda Ulash
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </form>
               </div>
 
-              {/* 2. HAR QANDAY AKAUNT BILAN ULANISH (1-Click Presets) */}
+              {/* 2. TEZKOR KANALLAR (1-Bosishda Sinab Ko'rish) */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <Globe className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Har qanday boshqa hisob yoki kanalni tanlang:</span>
+                    <span>Yoki tezkor sinov uchun mashhur kanallarni tanlang:</span>
                   </span>
                   <span className="text-[11px] text-slate-400">1 bosishda ulanadi</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {[
-                    { name: "VELORA", handle: "@VeloraRBX", tag: "50.6K • Sizning hisobingiz", color: "from-red-500/10 to-orange-500/10 border-red-300 text-red-700" },
-                    { name: "Kun.uz", handle: "@kunuz", tag: "2.1M obunachi", color: "from-blue-500/10 to-sky-500/10 border-blue-200 text-blue-700" },
-                    { name: "MittiVine", handle: "@mittivine", tag: "3.2M obunachi", color: "from-amber-500/10 to-orange-500/10 border-amber-200 text-amber-700" },
+                    { name: "Xamdam Sobirov", handle: "@XamdamSobirov_Official", tag: "1.38M obunachi", color: "from-red-500/10 to-orange-500/10 border-red-300 text-red-700" },
+                    { name: "Kun.uz", handle: "@kunuz", tag: "4.18M obunachi", color: "from-blue-500/10 to-sky-500/10 border-blue-200 text-blue-700" },
+                    { name: "MittiVine", handle: "@mittivine", tag: "2.21M obunachi", color: "from-amber-500/10 to-orange-500/10 border-amber-200 text-amber-700" },
                     { name: "Texnoplov", handle: "@texnoplov", tag: "410K obunachi", color: "from-purple-500/10 to-indigo-500/10 border-purple-200 text-purple-700" },
                     { name: "Subyektiv", handle: "@subyektiv", tag: "890K obunachi", color: "from-emerald-500/10 to-teal-500/10 border-emerald-200 text-emerald-700" },
                     { name: "MrBeast", handle: "@mrbeast", tag: "300M+ obunachi", color: "from-rose-500/10 to-pink-500/10 border-rose-200 text-rose-700" },
@@ -1470,37 +1502,6 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* 3. ISTALGAN BOSHQASINI QO'LDA KIRITISH */}
-              <div className="pt-2 border-t border-slate-100 space-y-3">
-                <span className="text-xs font-bold text-slate-600 block">
-                  Yoki dunyodagi istalgan boshqa kanal nomi / havolasini kiriting:
-                </span>
-                <form onSubmit={handleConnectMyChannel} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                    <input 
-                      type="text" 
-                      value={myChannelLink}
-                      onChange={(e) => setMyChannelLink(e.target.value)}
-                      placeholder="Masalan: @kanalingiz, havola yoki kanal nomi"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 font-semibold text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition text-xs sm:text-sm flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer whitespace-nowrap"
-                  >
-                    {isLoading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <PlusCircle className="w-4 h-4" />
-                    )}
-                    <span>Ulash</span>
-                  </button>
-                </form>
               </div>
             </div>
           ) : (
@@ -1544,47 +1545,81 @@ export default function HomePage() {
                     <span>🔴 YouTube'da Ochish ↗</span>
                   </a>
 
+                  {/* VIDIQ KABI YOUTUBE ICHIDA KO'RISH */}
+                  <button
+                    type="button"
+                    onClick={() => { setShowExtensionModal(true); setExtensionTab("bookmarklet"); }}
+                    className="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs flex items-center space-x-2 shadow-lg shadow-orange-500/20 transition cursor-pointer"
+                    title="YouTube sahifasiga VidIQ kabi qo'shish"
+                  >
+                    <Zap className="w-4 h-4 fill-white" />
+                    <span>⚡ YouTube'da VidIQ Kabi Ko'rish</span>
+                  </button>
+
                   {/* YOUTUBE STUDIO */}
                   <a
                     href="https://studio.youtube.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center space-x-1.5 border border-slate-700 transition cursor-pointer"
-                    title="YouTube Studio analitikasini ochish"
+                    className="px-3.5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center space-x-1.5 border border-slate-700 transition cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                    <span>YouTube Studio ↗</span>
+                    <span>Studio ↗</span>
                   </a>
 
-                  {/* HAVOLANI NUSXALASH */}
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}` : `https://www.youtube.com`, "yt-channel-link")}
-                    className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10 flex items-center space-x-1.5 cursor-pointer"
-                    title="YouTube havolasini nusxalash"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>{copiedId === "yt-channel-link" ? "Nusxalandi! ✓" : "Havola"}</span>
-                  </button>
-
-                  {/* YANGILASH */}
-                  <button 
-                    onClick={() => handleAutoConnectGoogle(myChannelData.handle || myChannelData.name)}
-                    disabled={isLoading}
-                    className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10 flex items-center space-x-1.5 cursor-pointer"
-                    title="Statistikalarni yangilash"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-                    <span>Yangilash</span>
-                  </button>
-
-                  {/* CHIQISH / ALMASHTIRISH */}
+                  {/* KANALNI UZISH / CHIQISH */}
                   <button 
                     onClick={handleDisconnectChannel}
-                    className="px-3.5 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-white text-xs font-bold transition border border-red-500/30 cursor-pointer"
+                    className="px-4 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-xs font-black transition shadow-md cursor-pointer flex items-center gap-1.5"
+                    title="Kanaldan chiqish va boshqa kanal ulash"
                   >
-                    Hisobni Almashtirish
+                    <X className="w-3.5 h-3.5" />
+                    <span>Kanalni Uzish (Chiqish)</span>
                   </button>
+                </div>
+              </div>
+
+              {/* 1.5. VIDIQ-STYLE AUDIT & TREND G'OYALAR PANELI */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Audit Ball */}
+                <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-slate-900 border-2 border-emerald-500/40 text-white shadow-xl flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-400">Kanal Salomatlik Auditi</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30">VidIQ Score</span>
+                  </div>
+                  <div className="my-3 flex items-baseline gap-2">
+                    <span className="text-4xl sm:text-5xl font-black text-emerald-400">88</span>
+                    <span className="text-slate-400 text-sm font-bold">/ 100 (Juda Zo'r)</span>
+                  </div>
+                  <div className="space-y-1.5 text-xs text-slate-300 border-t border-slate-800 pt-2.5">
+                    <div className="flex justify-between"><span>SEO & Sarlavhalar:</span> <strong className="text-emerald-400">92%</strong></div>
+                    <div className="flex justify-between"><span>Ko'rishlar oqimi:</span> <strong className="text-amber-400">84%</strong></div>
+                    <div className="flex justify-between"><span>Muxlislar faolligi:</span> <strong className="text-emerald-400">89%</strong></div>
+                  </div>
+                </div>
+
+                {/* Kunlik Trend G'oyalar (Daily Ideas like VidIQ) */}
+                <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 text-white shadow-xl space-y-3 md:col-span-2 flex flex-col justify-between">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <span className="text-xs font-black uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-orange-400" />
+                      <span>AI Kunlik Video G'oyalari (VidIQ Daily Ideas)</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">Bugungi trendlar</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {[
+                      { idea: "Dastlabki 30 soniyalik intrigali montaj (Hook formulasi)", growth: "🔥 O'sish: +120%" },
+                      { idea: "Eng ko'p beriladigan muxlislar savollariga maxsus javob videosi", growth: "📈 O'sish: +85%" },
+                      { idea: "Haftalik eng ko'p ko'rilgan videodan 3 ta Shorts kesib chiqarish", growth: "⚡ O'sish: +140%" }
+                    ].map((item, idx) => (
+                      <div key={idx} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
+                        <span className="text-slate-200 font-semibold line-clamp-1">💡 {item.idea}</span>
+                        <span className="text-[10px] font-black text-emerald-400 whitespace-nowrap ml-2 bg-emerald-500/10 px-2 py-0.5 rounded-md">{item.growth}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 

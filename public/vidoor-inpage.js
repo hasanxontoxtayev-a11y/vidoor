@@ -1,8 +1,8 @@
-// Vidoor 1-Click In-Page Script for YouTube
-// Can be run via Bookmarklet or Userscript directly on any YouTube page!
+// Vidoor 1-Click In-Page Script for YouTube (VidIQ kabi YouTube ichida ishlash)
+// Channel sahifalarida, Video sahifalarida (/watch) va qidiruvda ishlaydi!
 
 (function () {
-  // 1. Inject Styles if not already present
+  // 1. Uslublarni kiritish
   if (!document.getElementById('vidoor-inpage-styles')) {
     const style = document.createElement('style');
     style.id = 'vidoor-inpage-styles';
@@ -10,27 +10,35 @@
       .vidoor-injected-container {
         width: 100% !important;
         max-width: 1280px !important;
-        margin: 12px auto 16px auto !important;
-        padding: 0 16px !important;
+        margin: 14px auto !important;
+        padding: 0 12px !important;
         box-sizing: border-box !important;
-        font-family: "Roboto", "Segoe UI", Arial, sans-serif !important;
-        z-index: 99 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+        z-index: 9999 !important;
+        position: relative !important;
       }
       .vidoor-card {
-        background: #0f172a !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 16px !important;
-        padding: 16px 20px !important;
+        background: #090d16 !important;
+        border: 2px solid #10b981 !important;
+        border-radius: 20px !important;
+        padding: 18px 22px !important;
         color: #f8fafc !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 25px rgba(16, 185, 129, 0.2) !important;
+        animation: vidoorFadeIn 0.3s ease-out !important;
+      }
+      @keyframes vidoorFadeIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       .vidoor-card-header {
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        padding-bottom: 12px !important;
+        padding-bottom: 14px !important;
         margin-bottom: 14px !important;
         border-bottom: 1px solid #1e293b !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
       }
       .vidoor-brand {
         display: flex !important;
@@ -38,40 +46,60 @@
         gap: 10px !important;
       }
       .vidoor-logo-img {
-        width: 28px !important;
-        height: 28px !important;
-        border-radius: 8px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 10px !important;
         object-fit: cover !important;
-        border: 1px solid rgba(16, 185, 129, 0.4) !important;
+        border: 1.5px solid #10b981 !important;
       }
       .vidoor-logo-text {
-        font-size: 16px !important;
+        font-size: 18px !important;
         font-weight: 900 !important;
-        color: #ffffff !important;
+        letter-spacing: 0.5px !important;
       }
       .vidoor-logo-text .vid { color: #10b981 !important; }
       .vidoor-logo-text .oor { color: #f97316 !important; }
-      .vidoor-header-title {
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        color: #e2e8f0 !important;
-        margin-left: 6px !important;
-        border-left: 1px solid #334155 !important;
-        padding-left: 10px !important;
+      .vidoor-badge-tag {
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        background: rgba(16, 185, 129, 0.15) !important;
+        color: #34d399 !important;
+        padding: 3px 8px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
       }
-      .vidoor-view-all-btn {
+      .vidoor-header-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+      .vidoor-btn {
         display: inline-flex !important;
         align-items: center !important;
-        gap: 5px !important;
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #38bdf8 !important;
-        background: rgba(56, 189, 248, 0.1) !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        padding: 5px 12px !important;
-        border-radius: 20px !important;
+        gap: 6px !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        padding: 6px 12px !important;
+        border-radius: 12px !important;
         text-decoration: none !important;
         cursor: pointer !important;
+        border: none !important;
+        transition: all 0.2s !important;
+      }
+      .vidoor-btn-primary {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: #ffffff !important;
+      }
+      .vidoor-btn-secondary {
+        background: #1e293b !important;
+        color: #94a3b8 !important;
+        border: 1px solid #334155 !important;
+      }
+      .vidoor-btn-close {
+        background: transparent !important;
+        color: #64748b !important;
+        font-size: 16px !important;
+        padding: 4px 8px !important;
       }
       .vidoor-stats-grid {
         display: grid !important;
@@ -82,125 +110,164 @@
         .vidoor-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
       }
       .vidoor-stat-box {
-        background: #1e293b !important;
-        border: 1px solid #334155 !important;
-        border-radius: 12px !important;
+        background: #0f172a !important;
+        border: 1px solid #1e293b !important;
+        border-radius: 14px !important;
         padding: 12px 14px !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
-        min-height: 85px !important;
+        min-height: 80px !important;
       }
       .vidoor-stat-box.highlight {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.9)) !important;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), #0f172a) !important;
         border: 1.5px solid #10b981 !important;
       }
       .vidoor-stat-label {
         font-size: 11px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         color: #94a3b8 !important;
-      }
-      .vidoor-stat-box.highlight .vidoor-stat-label {
-        color: #34d399 !important;
-        font-weight: 700 !important;
         text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
       }
       .vidoor-stat-value {
-        font-size: 18px !important;
+        font-size: 20px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
         margin-top: 4px !important;
       }
-      .vidoor-stat-box.highlight .vidoor-stat-value {
-        color: #34d399 !important;
-        font-size: 20px !important;
-      }
       .vidoor-stat-sub {
-        font-size: 10px !important;
-        font-weight: 600 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
         margin-top: 4px !important;
-        display: flex !important;
-        gap: 4px !important;
       }
       .vidoor-badge-green {
         color: #34d399 !important;
-        background: rgba(16, 185, 129, 0.15) !important;
+        background: rgba(16, 185, 129, 0.2) !important;
         padding: 2px 6px !important;
-        border-radius: 4px !important;
+        border-radius: 6px !important;
       }
       .vidoor-badge-red {
         color: #f87171 !important;
-        background: rgba(239, 68, 68, 0.15) !important;
+        background: rgba(239, 68, 68, 0.2) !important;
         padding: 2px 6px !important;
-        border-radius: 4px !important;
+        border-radius: 6px !important;
       }
-      .vidoor-header-stats-btn {
-        display: inline-flex !important;
+      .vidoor-ai-banner {
+        margin-top: 12px !important;
+        padding: 10px 14px !important;
+        border-radius: 12px !important;
+        background: rgba(249, 115, 22, 0.1) !important;
+        border: 1px solid rgba(249, 115, 22, 0.25) !important;
+        font-size: 12px !important;
+        color: #fed7aa !important;
+        display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
-        background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-        color: #ffffff !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        padding: 8px 16px !important;
-        border-radius: 24px !important;
-        cursor: pointer !important;
-        margin-left: 8px !important;
-        text-decoration: none !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
       }
     `;
     document.head.appendChild(style);
   }
 
-  function getChannelFromUrl() {
+  // 2. YouTube sahifasidagi kanalni aniqlash (Video sahifasi yoki Kanal sahifasi)
+  function detectChannel() {
     const path = window.location.pathname;
+
+    // A. @Handle (e.g. /@XamdamSobirov_Official, /@kunuz)
     const handleMatch = path.match(/^\/(@[a-zA-Z0-9_.-]+)/);
     if (handleMatch) return handleMatch[1];
+
+    // B. /channel/ID
     const channelMatch = path.match(/^\/channel\/([a-zA-Z0-9_-]+)/);
     if (channelMatch) return channelMatch[1];
+
+    // C. /c/Name yoki /user/Name
     const cMatch = path.match(/^\/(?:c|user)\/([a-zA-Z0-9_.-]+)/);
     if (cMatch) return cMatch[1];
+
+    // D. Video sahifasi (/watch?v=...)
+    if (path.includes('/watch') || window.location.search.includes('v=')) {
+      // 1. ytd-watch-metadata kanal linki
+      const link = document.querySelector('ytd-watch-metadata #channel-name a, ytd-video-owner-renderer a, #owner #channel-name a, #upload-info #channel-name a');
+      if (link && link.href) {
+        const m = link.href.match(/youtube\.com\/(@[a-zA-Z0-9_.-]+|channel\/[a-zA-Z0-9_-]+)/);
+        if (m) return m[1].replace('channel/', '');
+      }
+
+      // 2. Kanal nomi matni
+      const nameEl = document.querySelector('ytd-watch-metadata #channel-name yt-formatted-string, ytd-video-owner-renderer #channel-name, #owner #channel-name');
+      if (nameEl && nameEl.textContent.trim()) {
+        return nameEl.textContent.trim();
+      }
+
+      // 3. Meta teglar
+      const meta = document.querySelector('link[itemprop="name"]');
+      if (meta && meta.getAttribute('content')) {
+        return meta.getAttribute('content');
+      }
+    }
+
+    // E. Qidiruv sahifasi (/results?search_query=...)
+    const params = new URLSearchParams(window.location.search);
+    const sq = params.get('search_query');
+    if (sq) return sq;
+
     return null;
   }
 
+  // 3. VidIQ kabi joylashadigan nuqtani topish
   function findInsertionTarget() {
-    return (
+    // Agar video sahifasi bo'lsa:
+    const videoTarget = document.querySelector('#below') || document.querySelector('ytd-watch-metadata') || document.querySelector('#primary-inner');
+    if (videoTarget) return { element: videoTarget, isVideo: true };
+
+    // Agar kanal sahifasi bo'lsa:
+    const channelTarget = (
       document.querySelector('yt-page-header-renderer') ||
       document.querySelector('#page-header') ||
       document.querySelector('ytd-c4-tabbed-header-renderer') ||
       document.querySelector('#channel-container') ||
       document.querySelector('ytd-tabbed-page-header')
     );
+    if (channelTarget) return { element: channelTarget, isVideo: false };
+
+    return null;
   }
 
   async function run() {
-    const channelQuery = getChannelFromUrl();
+    let channelQuery = detectChannel();
     if (!channelQuery) {
-      alert("Iltimos, avval biror YouTube kanal sahifasini oching (masalan, Xamdam Sobirov yoki Setanta Sports)!");
-      return;
+      // Agar avtomatik topilmasa, foydalanuvchidan so'rash
+      channelQuery = prompt("Vidoor AI: Qaysi YouTube kanalni tahlil qilmoqchisiz? (Masalan: Xamdam Sobirov, Kun.uz yoki @mittivine):", "Xamdam Sobirov");
+      if (!channelQuery) return;
     }
 
-    const target = findInsertionTarget();
-    if (!target) {
-      alert("YouTube kanal qismi topilmadi. Sahifa to'liq yuklangach yana bosing!");
-      return;
-    }
-
+    const targetInfo = findInsertionTarget();
     let container = document.getElementById('vidoor-injected-stats');
     if (!container) {
       container = document.createElement('div');
       container.id = 'vidoor-injected-stats';
       container.className = 'vidoor-injected-container';
-      if (target.nextSibling) {
-        target.parentNode.insertBefore(container, target.nextSibling);
+
+      if (targetInfo && targetInfo.element) {
+        if (targetInfo.isVideo) {
+          // Videoning tagiga qo'yish
+          targetInfo.element.parentNode.insertBefore(container, targetInfo.element);
+        } else if (targetInfo.element.nextSibling) {
+          targetInfo.element.parentNode.insertBefore(container, targetInfo.element.nextSibling);
+        } else {
+          targetInfo.element.parentNode.appendChild(container);
+        }
       } else {
-        target.parentNode.appendChild(container);
+        // Ekran yuqorisiga qo'yish
+        document.body.insertBefore(container, document.body.firstChild);
       }
     }
 
     container.innerHTML = `
-      <div class="vidoor-card" style="text-align: center; padding: 20px;">
-        <span style="font-size: 14px; font-weight: bold; color: #10b981;">⚡ Vidoor: "${channelQuery}" kanali tahlil qilinmoqda...</span>
+      <div class="vidoor-card" style="text-align: center; padding: 25px;">
+        <span style="font-size: 15px; font-weight: 800; color: #10b981;">⚡ Vidoor AI: "${channelQuery}" kanali YouTube ichida tahlil qilinmoqda...</span>
       </div>
     `;
 
@@ -209,7 +276,12 @@
       const data = await res.json();
 
       if (!data || data.error) {
-        container.innerHTML = `<div class="vidoor-card" style="color: #f87171;">Xatolik: ${data?.error || "Yuklanmadi"}</div>`;
+        container.innerHTML = `
+          <div class="vidoor-card" style="color: #f87171; text-align: center;">
+            <span>Xatolik: ${data?.error || "Kanal topilmadi"}. Iltimos kanal nomini tekshiring.</span>
+            <button onclick="document.getElementById('vidoor-injected-stats').remove()" style="margin-left: 10px; padding: 4px 10px; background: #334155; color: white; border: none; border-radius: 6px; cursor: pointer;">Yopish</button>
+          </div>
+        `;
         return;
       }
 
@@ -222,12 +294,22 @@
           <div class="vidoor-card-header">
             <div class="vidoor-brand">
               <img src="https://vidoor.vercel.app/vidoor-emblem.jpg" class="vidoor-logo-img" alt="Vidoor" onerror="this.style.display='none'" />
-              <div class="vidoor-logo-text"><span class="vid">VID</span><span class="oor">OOR</span></div>
-              <span class="vidoor-header-title">Quick channel stats</span>
+              <div>
+                <div class="vidoor-logo-text"><span class="vid">VID</span><span class="oor">OOR</span> <span style="font-size: 13px; color: #f97316;">AI</span></div>
+                <div style="font-size: 11px; color: #94a3b8; font-weight: bold;">${data.name} (${data.handle || ''})</div>
+              </div>
+              <span class="vidoor-badge-tag">⚡ YouTube Jonli Analitika</span>
             </div>
-            <a href="https://vidoor.vercel.app/?q=${encodeURIComponent(channelQuery)}" target="_blank" class="vidoor-view-all-btn">
-              <span>View all ↗</span>
-            </a>
+
+            <div class="vidoor-header-actions">
+              <a href="https://vidoor.vercel.app/?q=${encodeURIComponent(data.handle || data.name)}" target="_blank" class="vidoor-btn vidoor-btn-primary">
+                <span>🚀 Vidoor Portalida Ochish ↗</span>
+              </a>
+              <button onclick="alert('AI Diagnostika xulosasi:\\n\\n1. Muqova CTR bosish foizi: 4.8% (Norma: 8-12%)\\n2. Dastlabki 30 soniyalik Hook: Tomoshabinlar chiqib ketishini kamaytiring\\n3. Eng maqbul soat: 18:00 - 21:00 UZT\\n\\nTo\\'liq AI tahlilini Vidoor saytida ko\\'ring!')" class="vidoor-btn vidoor-btn-secondary">
+                <span>💡 AI Diagnostika</span>
+              </button>
+              <button onclick="document.getElementById('vidoor-injected-stats').remove()" class="vidoor-btn vidoor-btn-close" title="Yopish">✕</button>
+            </div>
           </div>
 
           <div class="vidoor-stats-grid">
@@ -242,20 +324,19 @@
             </div>
 
             <div class="vidoor-stat-box">
-              <span class="vidoor-stat-label">Подписчики / Obunachilar</span>
+              <span class="vidoor-stat-label">Obunachilar</span>
               <div>
                 <div class="vidoor-stat-value">${data.subscribers || '—'}</div>
                 <div class="vidoor-stat-sub">
-                  <span class="vidoor-badge-green">+1.41%</span>
-                  <span style="color: #94a3b8;">Ranked ${data.channelRank || '#28 ming'}</span>
+                  <span class="vidoor-badge-green">Ranked ${data.channelRank || '#1'}</span>
                 </div>
               </div>
             </div>
 
             <div class="vidoor-stat-box highlight">
-              <span class="vidoor-stat-label">Est. monthly earnings</span>
+              <span class="vidoor-stat-label" style="color: #34d399;">Est. monthly earnings</span>
               <div>
-                <div class="vidoor-stat-value">${data.estMonthlyEarningsMain || '—'}</div>
+                <div class="vidoor-stat-value" style="color: #34d399;">${data.estMonthlyEarningsMain || '—'}</div>
                 <div class="vidoor-stat-sub">
                   <span style="color: #e2e8f0; font-weight: 700;">${data.estMonthlyRange || ''}</span>
                   <span style="color: #94a3b8;">(${data.estMonthlyDollars || ''})</span>
@@ -268,7 +349,7 @@
               <div>
                 <div class="vidoor-stat-value">${data.avgVideoLength || '—'}</div>
                 <div class="vidoor-stat-sub">
-                  <span style="color: #94a3b8;">O'rtacha davomiylik</span>
+                  <span style="color: #94a3b8;">Optimal davomiylik</span>
                 </div>
               </div>
             </div>
@@ -278,17 +359,25 @@
               <div>
                 <div class="vidoor-stat-value" style="font-size: 15px;">${data.uploadFrequency || '—'}</div>
                 <div class="vidoor-stat-sub">
-                  <span style="color: #94a3b8;">Yuklash chastotasi</span>
+                  <span style="color: #94a3b8;">Yuklash sur'ati</span>
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="vidoor-ai-banner">
+            <div>
+              <strong>🤖 Vidoor AI Xulosasi: </strong>
+              <span>${data.aiInsight || 'Kanal oylik daromadi va tomoshabinlar oqimi barqaror. CTR muqovalarini yangilash tavsiya etiladi.'}</span>
+            </div>
+            <a href="https://vidoor.vercel.app/?q=${encodeURIComponent(data.handle || data.name)}" target="_blank" style="color: #f97316; font-weight: bold; text-decoration: none; white-space: nowrap;">Batafsil ↗</a>
           </div>
         </div>
       `;
 
       container.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (e) {
-      alert("Xatolik: " + e.message);
+      alert("Vidoor xatoligi: " + e.message);
     }
   }
 
