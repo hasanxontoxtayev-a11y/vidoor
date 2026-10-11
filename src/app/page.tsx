@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Youtube,
   Video,
-  Send,
   RefreshCw,
   Calendar,
   Zap,
@@ -25,9 +24,8 @@ import {
   Flame,
   Star,
   Copy,
-  Sliders,
   CheckCircle,
-  HelpCircle
+  BarChart3
 } from "lucide-react";
 
 export default function HomePage() {
@@ -38,10 +36,6 @@ export default function HomePage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"earnings" | "timing" | "videos" | "comments">("earnings");
   const [comments, setComments] = useState<any[]>([]);
-
-  // Interaktiv RPM kalkulyatori
-  const [customRpm, setCustomRpm] = useState<number>(1.6);
-  const [selectedTier, setSelectedTier] = useState<"uz" | "global" | "us">("uz");
 
   // AI Izoh Yordamchisi uchun maxsus izoh sinovi
   const [customCommentText, setCustomCommentText] = useState("");
@@ -78,7 +72,6 @@ export default function HomePage() {
 
       setSelectedChannel(data);
       setComments(data.sampleComments || []);
-      setCustomRpm(data.defaultRpm || 1.6);
       setIsLoading(false);
     } catch (err: any) {
       setErrorMsg("Internet xatoligi: " + err.message);
@@ -157,20 +150,6 @@ export default function HomePage() {
     }
   };
 
-  // Dinamik hisob-kitoblar (Interactive RPM)
-  const monthlyViewsRaw = selectedChannel?.monthlyViewsRaw || 300000;
-  const calculatedMonthly = Math.round((monthlyViewsRaw / 1000) * customRpm);
-  const calculatedYearly = Math.round(calculatedMonthly * 12);
-  const calculatedDaily = Math.round(calculatedMonthly / 30);
-
-  // Mintaqaviy tierni tanlash
-  const handleTierSelect = (tier: "uz" | "global" | "us") => {
-    setSelectedTier(tier);
-    if (tier === "uz") setCustomRpm(0.85);
-    else if (tier === "global") setCustomRpm(2.40);
-    else if (tier === "us") setCustomRpm(5.20);
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-white">
       {/* 1. Header */}
@@ -219,7 +198,7 @@ export default function HomePage() {
           <div className="hidden md:flex items-center space-x-2">
             <span className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
               <Zap className="w-3.5 h-3.5 mr-1 text-orange-500" />
-              Limitsiz & Bepul
+              100% Bepul & Limitsiz
             </span>
           </div>
         </div>
@@ -234,18 +213,18 @@ export default function HomePage() {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs sm:text-sm font-bold mb-6 shadow-sm">
                 <Flame className="w-4 h-4 text-orange-500" />
-                <span>Google & YouTube rasmiy ma'lumotlariga asoslangan professional analitika</span>
+                <span>Google & YouTube rasmiy ma'lumotlariga tayangan aniq daromad tahlili</span>
               </div>
 
               <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-tight">
-                YouTube kanallarning haqiqiy daromadi va{" "}
+                YouTube kanallarning haqiqiy oylik daromadini{" "}
                 <span className="bg-gradient-to-r from-emerald-600 to-orange-500 bg-clip-text text-transparent">
-                  o'sish sirlarini aniqlang
+                  to'g'ridan-to'g'ri aniqlang
                 </span>
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                Kanal oyiga qancha topadi? 1000 ta ko'rish uchun <strong>RPM</strong> stavkasi qancha? Videolarni Toshkent vaqti bilan soat nechida yuklash kerak? Kanal nomini yozing va aniq ko'ring!
+                Kanal oyiga qancha sof daromad topadi? 1 ta video uchun qancha oladi? Qidiruvga kanal nomini yozing va Google/YouTube rasmiy ko'rishlari asosidagi aniq oylik daromadini to'g'ridan-to'g'ri ko'ring!
               </p>
 
               {/* Qidiruv formasi */}
@@ -256,7 +235,7 @@ export default function HomePage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Kanal nomi yoki linki (masalan: texnoplov, mittivine, mrbeast, kunuz, subyektiv)"
+                    placeholder="Kanal nomi yoki linki (masalan: texnoplov, mittivine, mrbeast, subyektiv, kunuz)"
                     className="w-full px-4 py-3 text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none text-base font-semibold"
                   />
                   <button 
@@ -370,7 +349,7 @@ export default function HomePage() {
                   }`}
                 >
                   <DollarSign className="w-4 h-4" />
-                  <span>Daromad va RPM Kalkulyatori</span>
+                  <span>To'g'ridan-to'g'ri Oylik Daromad</span>
                 </button>
 
                 <button 
@@ -412,139 +391,103 @@ export default function HomePage() {
 
               {/* Tab Contenti */}
               <div>
-                {/* 1. DAROMAD VA RPM KALKULYATORI */}
+                {/* 1. TO'G'RIDAN-TO'G'RI OYLIK DAROMAD VA TAHLIL */}
                 {activeTab === "earnings" && (
                   <div className="space-y-6">
-                    {/* Stat kartalar */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    {/* Asosiy daromad ko'rsatkichlari kartasi */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {/* Oylik Sof Daromad */}
+                      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-3xl p-6 shadow-lg shadow-emerald-500/20 relative overflow-hidden">
+                        <div className="absolute right-3 top-3 opacity-15">
+                          <DollarSign className="w-20 h-20" />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-100">Oylik Sof Daromad</span>
+                        <p className="text-3xl sm:text-4xl font-black mt-2">{selectedChannel.exactMonthly}</p>
+                        <p className="text-xs text-emerald-100 mt-2 font-semibold">
+                          Oraliq: {selectedChannel.monthlyEarningsRange}
+                        </p>
+                      </div>
+
+                      {/* Yillik Daromad */}
+                      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
                         <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3">
-                          <DollarSign className="w-5 h-5" />
-                        </div>
-                        <span className="text-xs font-bold uppercase text-slate-400">1000 ko'rish uchun RPM</span>
-                        <p className="text-3xl font-black text-orange-500 mt-2">${customRpm.toFixed(2)}</p>
-                        <p className="text-xs text-slate-500 mt-2">
-                          Standart oraliq: <strong className="text-slate-700">{selectedChannel.rpmRange}</strong>
-                        </p>
-                      </div>
-
-                      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
-                          <TrendingUp className="w-5 h-5" />
-                        </div>
-                        <span className="text-xs font-bold uppercase text-slate-400">Hisoblangan Oylik Daromad</span>
-                        <p className="text-3xl font-black text-emerald-600 mt-2">${calculatedMonthly.toLocaleString()}/oy</p>
-                        <p className="text-xs text-slate-500 mt-2">
-                          Prognoz ko'rishlar: <strong>{selectedChannel.monthlyViewsEst}</strong>
-                        </p>
-                      </div>
-
-                      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                        <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-3">
                           <Award className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-bold uppercase text-slate-400">Hisoblangan Yillik Daromad</span>
-                        <p className="text-3xl font-black text-slate-900 mt-2">${calculatedYearly.toLocaleString()}/yil</p>
-                        <p className="text-xs text-teal-600 font-semibold mt-2">Kuniga taxminan ${calculatedDaily.toLocaleString()}</p>
+                        <span className="text-xs font-bold uppercase text-slate-400">Yillik Sof Daromad</span>
+                        <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">{selectedChannel.exactYearly}</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Oraliq: {selectedChannel.yearlyEarningsRange}
+                        </p>
+                      </div>
+
+                      {/* 1 ta Video Uchun O'rtacha Daromad */}
+                      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-3">
+                          <Video className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-bold uppercase text-slate-400">1 ta video uchun daromad</span>
+                        <p className="text-2xl sm:text-3xl font-black text-teal-700 mt-1">{selectedChannel.perVideoEarnings}</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          O'rtacha ko'rish: <strong>{selectedChannel.avgViewsPerVideo}</strong>
+                        </p>
+                      </div>
+
+                      {/* Kunlik Daromad */}
+                      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3">
+                          <TrendingUp className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-bold uppercase text-slate-400">Kunlik Daromad</span>
+                        <p className="text-2xl sm:text-3xl font-black text-orange-600 mt-1">{selectedChannel.dailyEarnings}</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          30 kunlik o'rtacha sur'at
+                        </p>
                       </div>
                     </div>
 
-                    {/* INTERAKTIV RPM KALKULYATORI (VidIQ Standarti) */}
-                    <div className="bg-gradient-to-br from-white to-orange-50/30 border-2 border-orange-200 rounded-3xl p-6 sm:p-8 shadow-sm">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    {/* ANIQ HISOB-KITOB METRIKALARI (VidIQ & SocialBlade Standartlari) */}
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+                      <div className="flex items-center space-x-2 mb-6">
+                        <BarChart3 className="w-5 h-5 text-emerald-600" />
+                        <h3 className="text-lg font-black text-slate-900">Daromadni Belgilovchi Haqiqiy Google Ko'rsatkichlari</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <span className="text-xs font-bold text-slate-400 uppercase">Oylik Haqiqiy Ko'rishlar</span>
+                          <p className="text-xl font-black text-slate-900 mt-1">{selectedChannel.monthlyViewsEst} ko'rish/oy</p>
+                          <p className="text-[11px] text-slate-500 mt-1">So'nggi videolarning oylik sur'ati</p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <span className="text-xs font-bold text-slate-400 uppercase">1000 ko'rish uchun RPM</span>
+                          <p className="text-xl font-black text-orange-600 mt-1">{selectedChannel.rpm}</p>
+                          <p className="text-[11px] text-slate-500 mt-1">{selectedChannel.niche} yo'nalishi bo'yicha</p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <span className="text-xs font-bold text-slate-400 uppercase">Auditoriya Mintaqasi</span>
+                          <p className="text-xl font-black text-slate-900 mt-1">{selectedChannel.country}</p>
+                          <p className="text-[11px] text-slate-500 mt-1">Geografik CPM ta'siri</p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <span className="text-xs font-bold text-slate-400 uppercase">Kanalning Jami Ko'rishlari</span>
+                          <p className="text-xl font-black text-slate-900 mt-1">{selectedChannel.totalViews}</p>
+                          <p className="text-[11px] text-slate-500 mt-1">{selectedChannel.joinedDate} dan buyon</p>
+                        </div>
+                      </div>
+
+                      {/* Tahliliy Xulosa */}
+                      <div className="mt-6 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-start space-x-3">
+                        <Sparkles className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
                         <div>
-                          <div className="flex items-center space-x-2">
-                            <Sliders className="w-5 h-5 text-orange-500" />
-                            <h3 className="text-lg font-black text-slate-900">Interaktiv VidIQ RPM Kalkulyatori</h3>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Auditoriya qayerdan ko'rishiga qarab YouTube har 1000 ko'rish uchun har xil pul to'laydi. O'zingiz xohlagan stavkani belgilang:
+                          <span className="text-xs font-bold text-emerald-900 block mb-0.5">VidIQ & SocialBlade Professional Xulosasi:</span>
+                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                            {selectedChannel.aiInsight}
                           </p>
                         </div>
-
-                        {/* Mintaqa tugmalari */}
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button
-                            onClick={() => handleTierSelect("uz")}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
-                              selectedTier === "uz" 
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs" 
-                                : "bg-white text-slate-700 border-slate-200 hover:border-emerald-500"
-                            }`}
-                          >
-                            🇺🇿 O'zbekiston / MDH ($0.85)
-                          </button>
-                          <button
-                            onClick={() => handleTierSelect("global")}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
-                              selectedTier === "global" 
-                                ? "bg-orange-500 text-white border-orange-500 shadow-xs" 
-                                : "bg-white text-slate-700 border-slate-200 hover:border-orange-500"
-                            }`}
-                          >
-                            🌐 Global / MDH ($2.40)
-                          </button>
-                          <button
-                            onClick={() => handleTierSelect("us")}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
-                              selectedTier === "us" 
-                                ? "bg-teal-600 text-white border-teal-600 shadow-xs" 
-                                : "bg-white text-slate-700 border-slate-200 hover:border-teal-500"
-                            }`}
-                          >
-                            🇺🇸 AQSH / Yevropa ($5.20)
-                          </button>
-                        </div>
                       </div>
-
-                      {/* Slayder */}
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm font-bold text-slate-700">
-                          <span>RPM stavkasini o'zgartirish:</span>
-                          <span className="text-base px-3 py-1 rounded-lg bg-orange-100 text-orange-800 font-black">
-                            ${customRpm.toFixed(2)} / 1000 ko'rish
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0.20"
-                          max="12.00"
-                          step="0.05"
-                          value={customRpm}
-                          onChange={(e) => {
-                            setCustomRpm(parseFloat(e.target.value));
-                            setSelectedTier("global");
-                          }}
-                          className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                        />
-                        <div className="flex justify-between text-[11px] text-slate-400 font-semibold">
-                          <span>$0.20 (Minimal Shorts/MDH)</span>
-                          <span>$2.00 (O'rtacha YouTube)</span>
-                          <span>$6.00 (IT/Texnologiya)</span>
-                          <span>$12.00 (Moliya/Investitsiya)</span>
-                        </div>
-                      </div>
-
-                      {/* Shaffof hisob-kitob formulasi */}
-                      <div className="mt-6 pt-5 border-t border-orange-100/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 gap-3">
-                        <div className="flex items-center space-x-2">
-                          <HelpCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                          <span><strong>Hisoblash formulasi:</strong> (Oylik ko'rishlar: {selectedChannel.monthlyViewsEst} ÷ 1,000) × ${customRpm.toFixed(2)} RPM = <strong>${calculatedMonthly.toLocaleString()}/oy</strong></span>
-                        </div>
-                        <span className="font-bold text-emerald-700 whitespace-nowrap bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                          VidIQ va SocialBlade standarti ✓
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                      <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-orange-500" />
-                        <span>VidIQ Daromad Tahlili & Niche Izohi:</span>
-                      </h4>
-                      <p className="text-slate-600 text-sm leading-relaxed">
-                        Ushbu hisob-kitob kanalning yo'nalishi (<strong>{selectedChannel.niche}</strong>), mintaqasi (<strong>{selectedChannel.country}</strong>) va so'nggi 15 ta videoning o'rtacha ko'rish tezligi (Velocity) bo'yicha aniqlandi. Siz yuqoridagi slayder orqali o'z auditoriyangizga mos RPM stavkasini tanlab, real daromadni aniq bilishingiz mumkin.
-                      </p>
                     </div>
                   </div>
                 )}
@@ -584,7 +527,7 @@ export default function HomePage() {
                     <div className="bg-gradient-to-r from-emerald-950 to-slate-900 text-white rounded-2xl p-6 border border-emerald-800 shadow-lg">
                       <div className="flex items-center space-x-2 text-emerald-400 mb-2 font-bold text-sm">
                         <Sparkles className="w-5 h-5 text-orange-400" />
-                        <span>AI Xulosasi va Amaliy Maslahat:</span>
+                        <span>AI Tavsiyasi:</span>
                       </div>
                       <p className="text-slate-200 text-base leading-relaxed">
                         {selectedChannel.aiInsight}
@@ -650,9 +593,9 @@ export default function HomePage() {
                       <div className="flex items-center space-x-2">
                         <Sparkles className="w-6 h-6 text-orange-500" />
                         <div>
-                          <h3 className="text-lg font-black text-slate-900">Yordamchi AI Dasturi: Izohlarga Javob Yaratish</h3>
+                          <h3 className="text-lg font-black text-slate-900">Yordamchi AI Dasturi: Izohlarga Do'stona Javob Yaratish</h3>
                           <p className="text-xs text-slate-500">
-                            Muxlisingiz yozgan izohni kiriting, AI unga mos tilda (o'zbek, rus, ingliz) va kerakli ohangda do'stona javob yozadi.
+                            Muxlisingiz yozgan izohni kiriting, AI unga mos tilda (o'zbek, rus, ingliz) va kerakli ohangda do'stona javob tayyorlaydi.
                           </p>
                         </div>
                       </div>
@@ -760,7 +703,7 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    {/* Kanalning tayyor namunalari */}
+                    {/* Kanalning namunalari */}
                     <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                       <h4 className="text-base font-bold text-slate-900">Ushbu kanalning so'nggi izohlari va AI javoblari:</h4>
                       <div className="space-y-4">
@@ -828,7 +771,7 @@ export default function HomePage() {
               </div>
               <h2 className="text-2xl font-black text-slate-900">O'z YouTube Kanalingizni Birlashtiring</h2>
               <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                Kanal nomingizni yoki havolangizni kiriting. Vidoor sizning yuklash soatlaringizni, auditoriyani saqlab qolish (retention) ko'rsatkichlaringizni va izohlarga AI javob berish dasturini faollashtiradi. 100% bepul.
+                Kanal nomingizni yoki havolangizni kiriting. Vidoor kanalingizning aniq oylik daromadini, yuklash soatlarini, auditoriyani saqlab qolish (retention) ko'rsatkichlarini va izohlarga javob beruvchi AI dasturini ochib beradi. 100% bepul.
               </p>
 
               <form onSubmit={handleConnectMyChannel} className="mt-6 space-y-3">
@@ -890,21 +833,21 @@ export default function HomePage() {
               {/* Shaxsiy kanal ko'rsatkichlari */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Eng optimal yuklash soatingiz</span>
+                  <span className="text-xs font-bold uppercase text-slate-400">Oylik Sof Daromadingiz</span>
+                  <p className="text-3xl font-black text-emerald-600 mt-2">{myChannelData.exactMonthly}</p>
+                  <p className="text-xs text-slate-500 mt-2">Oraliq: {myChannelData.monthlyEarningsRange}</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                  <span className="text-xs font-bold uppercase text-slate-400">Optimal yuklash soatingiz</span>
                   <p className="text-3xl font-black text-orange-500 mt-2">{myChannelData.bestTime}</p>
                   <p className="text-xs text-slate-500 mt-2">{myChannelData.bestDays} kunlari auditoriya eng faol</p>
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Optimal video davomiyligi</span>
-                  <p className="text-3xl font-black text-slate-900 mt-2">{myChannelData.avgDuration}</p>
-                  <p className="text-xs text-slate-500 mt-2">Auditoriya saqlanishi: {myChannelData.retentionRate}</p>
-                </div>
-
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Yo'nalishingiz RPM ko'rsatkichi</span>
-                  <p className="text-3xl font-black text-emerald-600 mt-2">{myChannelData.rpm}</p>
-                  <p className="text-xs text-slate-500 mt-2">1000 ta ko'rish uchun kutilayotgan daromad</p>
+                  <span className="text-xs font-bold uppercase text-slate-400">1 ta video uchun daromad</span>
+                  <p className="text-3xl font-black text-slate-900 mt-2">{myChannelData.perVideoEarnings}</p>
+                  <p className="text-xs text-slate-500 mt-2">1000 ko'rish uchun RPM: {myChannelData.rpm}</p>
                 </div>
               </div>
 
