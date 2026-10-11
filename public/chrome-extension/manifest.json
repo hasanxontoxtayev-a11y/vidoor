@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Vidoor — YouTube Analitika & VidIQ Muqobili",
+  "version": "1.0.0",
+  "description": "YouTube kanallar daromadi, 7 kunlik ko'rishlari va statistikasini 1 bosishda ko'rsatuvchi bepul kengaytma",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Vidoor Tahlil"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}

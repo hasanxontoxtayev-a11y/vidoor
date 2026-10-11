@@ -9,7 +9,26 @@ export async function GET(request: Request) {
   }
 
   try {
-    const clean = query.trim()
+    let rawInput = query.trim();
+
+    // Agar video yoki Shorts linki kiritilgan bo'lsa (masalan, watch?v= yoki youtu.be yoki /shorts/):
+    if (/watch\?v=|youtu\.be\/|\/shorts\//i.test(rawInput)) {
+      try {
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(rawInput)}&format=json`);
+        if (oembedRes.ok) {
+          const oembedData = await oembedRes.json();
+          if (oembedData?.author_url) {
+            rawInput = oembedData.author_url.replace(/^https?:\/\/(www\.)?youtube\.com\//i, '');
+          } else if (oembedData?.author_name) {
+            rawInput = oembedData.author_name;
+          }
+        }
+      } catch (e: any) {
+        console.warn("oEmbed resolution failed:", e.message);
+      }
+    }
+
+    const clean = rawInput
       .replace(/^https?:\/\/(www\.)?youtube\.com\//i, '')
       .replace(/^\/?(c\/|user\/|channel\/)?/i, '')
       .replace(/\/$/, '');
@@ -21,7 +40,7 @@ export async function GET(request: Request) {
     let targetAvatar = '';
 
     try {
-      const sUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAg%253D%253D`;
+      const sUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(clean)}&sp=EgIQAg%253D%253D`;
       const sRes = await fetch(sUrl, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",

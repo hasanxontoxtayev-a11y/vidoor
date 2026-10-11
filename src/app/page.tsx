@@ -28,7 +28,14 @@ import {
   BarChart3,
   Users,
   Activity,
-  Layers
+  Layers,
+  Download,
+  Share2,
+  Bookmark,
+  Smartphone,
+  Laptop,
+  Puzzle,
+  X
 } from "lucide-react";
 
 export default function HomePage() {
@@ -54,14 +61,46 @@ export default function HomePage() {
   const [myChannelLink, setMyChannelLink] = useState("");
   const [myChannelData, setMyChannelData] = useState<any>(null);
 
-  // Boshlang'ich kanalni yuklash (Mittivine)
+  // Chrome Kengaytmasi va Tezkor Kirish modali
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [extensionTab, setExtensionTab] = useState<"bookmarklet" | "extension" | "pwa" | "search">("bookmarklet");
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  // Boshlang'ich kanalni yuklash (URL parametrlar yoki KunUZ/Mittivine)
   useEffect(() => {
-    fetchChannel("mittivine");
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("q") || params.get("channel") || params.get("query") || params.get("url");
+      if (q) {
+        setSearchQuery(q);
+        fetchChannel(q);
+      } else {
+        fetchChannel("kunuz");
+      }
+
+      const handler = (e: any) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+      };
+      window.addEventListener("beforeinstallprompt", handler);
+      window.addEventListener("appinstalled", () => {
+        setIsAppInstalled(true);
+        setDeferredPrompt(null);
+      });
+      return () => window.removeEventListener("beforeinstallprompt", handler);
+    }
   }, []);
 
   const fetchChannel = async (query: string) => {
     setIsLoading(true);
     setErrorMsg("");
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("q", query);
+      window.history.replaceState({}, "", url.toString());
+    }
 
     try {
       const res = await fetch(`/api/youtube?query=${encodeURIComponent(query)}`);
@@ -79,6 +118,26 @@ export default function HomePage() {
     } catch (err: any) {
       setErrorMsg("Internet xatoligi: " + err.message);
       setIsLoading(false);
+    }
+  };
+
+  const handleShareChannel = () => {
+    if (typeof window !== "undefined" && selectedChannel) {
+      const shareUrl = `${window.location.origin}/?q=${encodeURIComponent(selectedChannel.handle || selectedChannel.name)}`;
+      navigator.clipboard.writeText(shareUrl);
+      handleCopy(shareUrl, "share-channel");
+    }
+  };
+
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert("Ilovani o'rnatish uchun: Chrome brauzeringizning manzil qatoridagi (URL) 'O'rnatish' belgisini bosing yoki Chrome menyusidan (⋮) 'Ilovani o'rnatish'ni tanlang.");
     }
   };
 
@@ -198,11 +257,15 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="hidden md:flex items-center space-x-2">
-            <span className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <Zap className="w-3.5 h-3.5 mr-1 text-orange-500" />
-              100% Bepul & Limitsiz
-            </span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => { setShowExtensionModal(true); setExtensionTab("bookmarklet"); }}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Zap className="w-3.5 h-3.5 fill-white text-white" />
+              <span className="hidden sm:inline">⚡ Chrome & Xatcho'p</span>
+              <span className="sm:hidden">⚡ Chrome</span>
+            </button>
           </div>
         </div>
       </header>
@@ -285,6 +348,30 @@ export default function HomePage() {
                     🇺🇸 mrbeast
                   </button>
                 </div>
+
+                {/* 1-Click Tezkor Kirish Banneri (VidIQ kabi har qanday joydan tortib olish) */}
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setShowExtensionModal(true); setExtensionTab("bookmarklet"); }}
+                    className="inline-flex items-center space-x-2 px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold shadow-md transition border border-slate-700 cursor-pointer"
+                  >
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>⚡ Chrome & YouTube'dan 1-bosishda tortib olish</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[11px] font-black border border-emerald-500/30">
+                      VidIQ usulida
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setShowExtensionModal(true); setExtensionTab("pwa"); }}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs sm:text-sm font-bold shadow-2xs transition cursor-pointer"
+                  >
+                    <Smartphone className="w-4 h-4 text-emerald-600" />
+                    <span>Ilovani O'rnatish</span>
+                  </button>
+                </div>
               </form>
             </div>
           </section>
@@ -306,6 +393,15 @@ export default function HomePage() {
                       <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                         {selectedChannel.handle}
                       </span>
+                      <button
+                        type="button"
+                        onClick={handleShareChannel}
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition border border-slate-200 ml-1 cursor-pointer"
+                        title="Tahlil havolasini nusxalash"
+                      >
+                        <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{copiedId === "share-channel" ? "Nusxalandi! ✓" : "Ulashish"}</span>
+                      </button>
                     </div>
                     <div className="text-xs text-slate-500 mt-2 flex flex-wrap items-center gap-3">
                       <span>Mintaqa: <strong className="text-slate-800">{selectedChannel.country}</strong></span>
@@ -957,6 +1053,261 @@ export default function HomePage() {
           <p>© 2026 Vidoor. VidIQ va SocialBlade darajasidagi bepul tahlil platformasi. Barcha huquqlar himoyalangan.</p>
         </div>
       </footer>
+
+      {/* 4. MODAL: CHROME VA TEZKOR KIRISH (VIDIQ KABI HAR QANDAY JOYDAN TORTIB OLISH) */}
+      {showExtensionModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-orange-500 flex items-center justify-center font-black text-xl text-white">
+                  ⚡
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">
+                    VidIQ kabi har qanday joydan tortib olish
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Chrome, Google va YouTube sahifalaridan 1 bosishda oson kirish
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowExtensionModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex border-b border-slate-200 bg-slate-50 px-6 pt-3 gap-2 overflow-x-auto">
+              <button
+                onClick={() => setExtensionTab("bookmarklet")}
+                className={`pb-3 px-3 text-xs font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                  extensionTab === "bookmarklet"
+                    ? "border-emerald-500 text-emerald-700"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                ⚡ 1. Tezkor Xatcho'p (Eng osoni)
+              </button>
+              <button
+                onClick={() => setExtensionTab("extension")}
+                className={`pb-3 px-3 text-xs font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                  extensionTab === "extension"
+                    ? "border-emerald-500 text-emerald-700"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                🧩 2. Chrome Kengaytmasi
+              </button>
+              <button
+                onClick={() => setExtensionTab("pwa")}
+                className={`pb-3 px-3 text-xs font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                  extensionTab === "pwa"
+                    ? "border-emerald-500 text-emerald-700"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                📱 3. Ilovani O'rnatish
+              </button>
+              <button
+                onClick={() => setExtensionTab("search")}
+                className={`pb-3 px-3 text-xs font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                  extensionTab === "search"
+                    ? "border-emerald-500 text-emerald-700"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                🔍 4. Google & Chrome Qidiruvi
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              {/* TAB 1: BOOKMARKLET */}
+              {extensionTab === "bookmarklet" && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start space-x-3">
+                    <Sparkles className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-black text-emerald-900">
+                        Eng oson va tezkor yo'l — Hech narsa o'rnatish shart emas!
+                      </h4>
+                      <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
+                        Quyidagi yashil tugmani sichqoncha bilan ushlab, brauzeringizning <strong>Xatcho'plar (Bookmarks) paneliga</strong> sudrab qo'ying (Chrome'da <kbd className="px-1.5 py-0.5 bg-white rounded border border-emerald-300 font-mono text-[10px]">Ctrl + Shift + B</kbd> tugmalarini bosing).
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Drag Button */}
+                  <div className="text-center p-6 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center space-y-2">
+                    <span className="text-xs font-bold text-slate-500">
+                      Ushbu tugmani Xatcho'plar paneliga sudrab qo'ying 👇
+                    </span>
+                    <a
+                      href="javascript:(function(){var u=window.location.href;window.open('https://vidoor.vercel.app/?q='+encodeURIComponent(u),'_blank');})();"
+                      onClick={(e) => e.preventDefault()}
+                      draggable="true"
+                      className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-sm shadow-lg shadow-emerald-600/30 cursor-grab active:cursor-grabbing hover:scale-105 transition"
+                    >
+                      <Zap className="w-4 h-4 fill-white" />
+                      <span>⚡ Vidoor Tahlil</span>
+                    </a>
+                    <span className="text-[11px] text-slate-400">
+                      (Yoki o'ng tugmani bosib: "Bookmark link" / "Xatcho'pga qo'shish"ni tanlang)
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl text-xs space-y-2 border border-slate-800">
+                    <span className="font-bold text-orange-400 block">Qanday ishlaydi?</span>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-300">
+                      <li>YouTube'da xohlagan kanalni, videoni yoki Shorts'ni tomosha qiling.</li>
+                      <li>Chrome'ning yuqori panelidagi <strong>"⚡ Vidoor Tahlil"</strong> xatcho'pini 1 marta bosing.</li>
+                      <li>Darhol Vidoor ochiladi va shu kanalning barcha oylik daromadi, 7 kunlik ko'rishlari va VidIQ statistikasini tortib oladi!</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: CHROME EXTENSION */}
+              {extensionTab === "extension" && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200 flex items-start space-x-3">
+                    <Puzzle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-black text-orange-900">
+                        VidIQ kabi Chrome Kengaytmasi (Extension)
+                      </h4>
+                      <p className="text-xs text-orange-800 mt-1 leading-relaxed">
+                        Chrome brauzeringizga doimiy kengaytma sifatida qo'shib qo'ying va har safar YouTube'da turganingizda 1 bosishda mini-oynadan foydalaning.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-center py-4">
+                    <a
+                      href="/vidoor-chrome-extension.zip"
+                      download="vidoor-chrome-extension.zip"
+                      className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-sm shadow-lg shadow-orange-500/30 hover:opacity-95 transition"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>📥 vidoor-chrome-extension.zip ni yuklab olish (Bepul)</span>
+                    </a>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2.5">
+                    <span className="font-bold text-slate-800 block">O'rnatish 3 qadamda:</span>
+                    <div className="space-y-2 text-slate-600">
+                      <div className="flex items-start space-x-2">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
+                        <span>Yuklab olingan <strong>vidoor-chrome-extension.zip</strong> faylini arxivdan chiqaring (Extract).</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
+                        <span>Chrome brauzerida manzil qatoriga <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono text-emerald-700">chrome://extensions</code> deb yozing va o'ng yuqoridagi <strong>"Developer mode"</strong> (Dasturchi rejimi)ni yoqing.</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">3</span>
+                        <span>Chap yuqoridagi <strong>"Load unpacked"</strong> (Paketsiz yuklash) tugmasini bosing va arxivdan chiqarilgan papkani tanlang — kengaytma Chrome'ingizda tayyor bo'ladi!</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: PWA APP */}
+              {extensionTab === "pwa" && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 flex items-start space-x-3">
+                    <Smartphone className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-black text-teal-900">
+                        Vidoor Ilovasini Kompyuter yoki Telefonga O'rnatish
+                      </h4>
+                      <p className="text-xs text-teal-800 mt-1 leading-relaxed">
+                        Vidoor to'liq Progressive Web App (PWA) sifatida yaratilgan. Hech qanday Play Market yoki App Store'siz 1 soniyada ekranga dastur bo'lib tushadi!
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-center py-4">
+                    <button
+                      type="button"
+                      onClick={handleInstallPWA}
+                      className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-sm shadow-lg shadow-emerald-600/30 hover:opacity-95 transition cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>📲 Vidoor Ilovasini Ekraningizga O'rnatish</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200">
+                      <span className="font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                        <Laptop className="w-4 h-4 text-emerald-600" />
+                        Windows / Mac kompyuterda:
+                      </span>
+                      <p className="text-slate-600">
+                        Chrome manzil qatorining (URL) o'ng tomonidagi kichik kompyutercha ("O'rnatish") belgisini bosing.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200">
+                      <span className="font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                        <Smartphone className="w-4 h-4 text-orange-500" />
+                        Android / iPhone telefonda:
+                      </span>
+                      <p className="text-slate-600">
+                        Brauzer menyusidagi (3 ta nuqta yoki ulashish) "Bosh ekranga qo'shish" (Add to Home screen) tugmasini bosing.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: SEARCH ENGINE */}
+              {extensionTab === "search" && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start space-x-3">
+                    <Search className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-black text-sky-900">
+                        Google & Chrome Manzil Qatoridan To'g'ridan-To'g'ri Qidirish
+                      </h4>
+                      <p className="text-xs text-sky-800 mt-1 leading-relaxed">
+                        Chrome brauzeringizga Vidoor qidiruv tizimi ulandi (OpenSearch).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl text-xs space-y-2 border border-slate-800">
+                    <span className="font-bold text-sky-400 block">Chrome Omnibox Tezkor Qidiruvi:</span>
+                    <ol className="list-decimal list-inside space-y-2 text-slate-300">
+                      <li>Chrome manzil qatoriga <code className="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded font-mono">vidoor.vercel.app</code> deb yozing.</li>
+                      <li>Klaviaturangizdagi <kbd className="bg-slate-700 text-white px-2 py-0.5 rounded font-mono">TAB</kbd> yoki probel tugmasini bosing.</li>
+                      <li>Istalgan kanal nomini (masalan, <em>kunuz</em>, <em>subyektiv</em>) yozing va <kbd className="bg-slate-700 text-white px-2 py-0.5 rounded font-mono">Enter</kbd> bosing — darhol Vidoorda ochiladi!</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+              <span>Barcha vositalar 100% bepul va cheklovsiz taqdim etiladi.</span>
+              <button
+                onClick={() => setShowExtensionModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 font-bold text-slate-700 transition cursor-pointer"
+              >
+                Yopish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
