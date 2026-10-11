@@ -16,3 +16,4 @@ __pycache__/
 # Computer junk
 .DS_Store
 Thumbs.db
+*.tsbuildinfo

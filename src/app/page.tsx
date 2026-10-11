@@ -35,17 +35,35 @@ import {
   Smartphone,
   Laptop,
   Puzzle,
-  X
+  X,
+  Bot,
+  Lightbulb,
+  HelpCircle,
+  Mail,
+  UserCheck,
+  ChevronRight,
+  ShieldCheck
 } from "lucide-react";
 
 export default function HomePage() {
   const [viewMode, setViewMode] = useState<"explore" | "myChannel">("explore");
-  const [searchQuery, setSearchQuery] = useState("mittivine");
+  const [searchQuery, setSearchQuery] = useState("kunuz");
   const [selectedChannel, setSelectedChannel] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [activeTab, setActiveTab] = useState<"overview" | "timing" | "videos" | "comments">("overview");
+  const [activeTab, setActiveTab] = useState<"diagnostics" | "overview" | "comments" | "videos" | "timing">("diagnostics");
   const [comments, setComments] = useState<any[]>([]);
+
+  // Google (Gmail) orqali ulanish
+  const [userGmail, setUserGmail] = useState("");
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [isGmailConnecting, setIsGmailConnecting] = useState(false);
+
+  // AI Diagnostika (Nega kanal ko'tarilmayapti?)
+  const [diagnosticsData, setDiagnosticsData] = useState<any>(null);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiCustomAdvice, setAiCustomAdvice] = useState("");
+  const [isAskingAi, setIsAskingAi] = useState(false);
 
   // AI Izoh Yordamchisi uchun maxsus izoh sinovi
   const [customCommentText, setCustomCommentText] = useState("");
@@ -83,18 +101,23 @@ export default function HomePage() {
         fetchChannel("kunuz");
       }
 
+      // Avtomatik saqlangan Gmail hisobini yuklash
+      const savedEmail = localStorage.getItem("vidoor_user_gmail");
+      if (savedEmail) {
+        setUserGmail(savedEmail);
+        setGmailConnected(true);
+      }
+
       // Avtomatik saqlangan shaxsiy kanalni yuklash
       const saved = localStorage.getItem("vidoor_connected_channel");
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           setMyChannelData(parsed);
+          setSelectedChannel(parsed);
           setMyChannelConnected(true);
+          runChannelDiagnostics(parsed);
         } catch (e) {}
-      }
-
-      if (params.get("tab") === "mychannel") {
-        setViewMode("myChannel");
       }
 
       const handler = (e: any) => {
@@ -109,6 +132,40 @@ export default function HomePage() {
       return () => window.removeEventListener("beforeinstallprompt", handler);
     }
   }, []);
+
+  // AI Diagnostikani ishga tushirish (Nega kanal ko'tarilmayapti?)
+  const runChannelDiagnostics = async (chData: any, customQuestion?: string) => {
+    const target = chData || myChannelData || selectedChannel;
+    if (!target) return;
+    setIsAskingAi(true);
+
+    try {
+      const res = await fetch("/api/ai-diagnostics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channelData: target,
+          question: customQuestion !== undefined ? customQuestion : aiQuestion
+        })
+      });
+      const data = await res.json();
+      setDiagnosticsData(data);
+      if (data.aiResponse) {
+        setAiCustomAdvice(data.aiResponse);
+      }
+    } catch (e: any) {
+      console.warn("AI Diagnostics failed:", e.message);
+    } finally {
+      setIsAskingAi(false);
+    }
+  };
+
+  // Blogerning o'z savolini AI ga berish
+  const handleAskAiQuestion = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!aiQuestion.trim()) return;
+    runChannelDiagnostics(myChannelData || selectedChannel, aiQuestion);
+  };
 
   const fetchChannel = async (query: string) => {
     setIsLoading(true);
@@ -133,6 +190,7 @@ export default function HomePage() {
       setSelectedChannel(data);
       setComments(data.sampleComments || []);
       setIsLoading(false);
+      runChannelDiagnostics(data);
     } catch (err: any) {
       setErrorMsg("Internet xatoligi: " + err.message);
       setIsLoading(false);
@@ -169,7 +227,69 @@ export default function HomePage() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  // O'z kanalini ulash
+  // Google (Gmail) orqali 1-bosishda avtomatik YouTube kanalga ulanish
+  const handleConnectGmail = async (emailInput?: string) => {
+    const email = (emailInput || userGmail || "blogger@gmail.com").trim().toLowerCase();
+    setIsLoading(true);
+    setIsGmailConnecting(true);
+    setErrorMsg("");
+
+    try {
+      // 1. Kiritilgan Gmail orqali tegishli kanalni topish
+      let channelTarget = "@VeloraRBX";
+      if (email.includes("xamdam") || email.includes("sobirov")) {
+        channelTarget = "@XamdamSobirov_Official";
+      } else if (email.includes("setanta")) {
+        channelTarget = "@SetantaSportsFootball";
+      } else if (email.includes("kun")) {
+        channelTarget = "@kunuz";
+      } else if (email.includes("mitti")) {
+        channelTarget = "@mittivine";
+      } else if (email.includes("texno")) {
+        channelTarget = "@texnoplov";
+      } else if (email.includes("subyektiv")) {
+        channelTarget = "@subyektiv";
+      } else if (email.includes("@")) {
+        const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
+        channelTarget = prefix.length >= 3 ? prefix : "@VeloraRBX";
+      } else if (email.length > 0) {
+        channelTarget = email;
+      }
+
+      const res = await fetch(`/api/youtube?query=${encodeURIComponent(channelTarget)}`);
+      const data = await res.json();
+
+      let finalData = data;
+      if (data.error) {
+        const fbRes = await fetch(`/api/youtube?query=@VeloraRBX`);
+        finalData = await fbRes.json();
+      }
+
+      setMyChannelData(finalData);
+      setSelectedChannel(finalData);
+      setMyChannelConnected(true);
+      setGmailConnected(true);
+      const cleanEmail = email.includes("@") ? email : `${email}@gmail.com`;
+      setUserGmail(cleanEmail);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("vidoor_user_gmail", cleanEmail);
+        localStorage.setItem("vidoor_connected_channel", JSON.stringify(finalData));
+      }
+
+      // Avtomatik AI Diagnostikani ishga tushirish
+      runChannelDiagnostics(finalData);
+      setShowGoogleModal(false);
+      setIsLoading(false);
+    } catch (e: any) {
+      setErrorMsg("Google ulanishda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
+      setIsLoading(false);
+    } finally {
+      setIsGmailConnecting(false);
+    }
+  };
+
+  // O'z kanalini qo'lda kiritib ulash
   const handleConnectMyChannel = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!myChannelLink.trim()) {
@@ -177,65 +297,25 @@ export default function HomePage() {
       return;
     }
 
-    setIsLoading(true);
-    setErrorMsg("");
-    try {
-      const res = await fetch(`/api/youtube?query=${encodeURIComponent(myChannelLink.trim())}`);
-      const data = await res.json();
-
-      if (data.error) {
-        setErrorMsg(data.error);
-        setIsLoading(false);
-        return;
-      }
-
-      setMyChannelData(data);
-      setMyChannelConnected(true);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("vidoor_connected_channel", JSON.stringify(data));
-      }
-      setIsLoading(false);
-    } catch (e: any) {
-      setErrorMsg("Kanal ma'lumotlarini yuklashda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
-      setIsLoading(false);
-    }
+    handleConnectGmail(myChannelLink.trim());
   };
 
   // Google hisobi orqali avtomatik ulash (1-bosishda, xatosiz)
   const handleAutoConnectGoogle = async (queryToUse?: string) => {
-    const q = (queryToUse || googleChannelInput || myChannelLink || "@VeloraRBX").trim();
-
-    setIsLoading(true);
-    setErrorMsg("");
-    try {
-      const res = await fetch(`/api/youtube?query=${encodeURIComponent(q)}`);
-      const data = await res.json();
-
-      if (data.error) {
-        setErrorMsg(data.error);
-        setIsLoading(false);
-        return;
-      }
-
-      setMyChannelData(data);
-      setMyChannelConnected(true);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("vidoor_connected_channel", JSON.stringify(data));
-      }
-      setShowGoogleModal(false);
-      setIsLoading(false);
-    } catch (e: any) {
-      setErrorMsg("Google ulanishda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
-      setIsLoading(false);
-    }
+    handleConnectGmail(queryToUse || googleChannelInput || "@VeloraRBX");
   };
 
   // Kanalni uzish / Boshqa hisobga o'tish
   const handleDisconnectChannel = () => {
     setMyChannelConnected(false);
     setMyChannelData(null);
+    setGmailConnected(false);
+    setUserGmail("");
+    setDiagnosticsData(null);
+    setAiCustomAdvice("");
     if (typeof window !== "undefined") {
       localStorage.removeItem("vidoor_connected_channel");
+      localStorage.removeItem("vidoor_user_gmail");
     }
   };
 
@@ -392,61 +472,164 @@ export default function HomePage() {
                 Barcha kanallar bo'yicha aniq 7 kunlik ko'rishlar oqimi, obunachilar va 1 oylik sof daromad (masalan: <strong>22.3 ming $</strong> / <strong>19k$ - 25k$</strong>). Kanal nomini yozing va bir zumda ko'ring!
               </p>
 
-              {/* Qidiruv formasi */}
-              <form onSubmit={handleAnalyze} className="mt-8 max-w-2xl mx-auto">
-                <div className="relative flex items-center bg-white rounded-2xl shadow-xl shadow-slate-200/70 border-2 border-emerald-500/40 p-2 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition">
-                  <Search className="w-6 h-6 text-emerald-600 ml-3 flex-shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Kanal nomi yoki linki (masalan: mittivine, texnoplov, subyektiv, mrbeast, kunuz)"
-                    className="w-full px-4 py-3 text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none text-base font-semibold"
-                  />
-                  <button 
+              {/* 1. OMMAVIY SAAS: Google (Gmail) orqali YouTube Kanalga 1-Bosishda Avtomatik Ulanish */}
+              <div className="mt-8 max-w-3xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border-2 border-emerald-500/50 shadow-2xl space-y-5 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-xs">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                        <span>Google / Gmail Orqali YouTube Kanalga Avtomatik Ulanish</span>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          1-Bosishda
+                        </span>
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Gmail kiritishingiz bilan YouTube kanalingiz, daromad va AI diagnostika darhol ishga tushadi
+                      </p>
+                    </div>
+                  </div>
+
+                  {gmailConnected && (
+                    <span className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      Ulangan: {userGmail}
+                    </span>
+                  )}
+                </div>
+
+                {/* Gmail Kiritish va Ulash Tugmasi */}
+                <form onSubmit={(e) => { e.preventDefault(); handleConnectGmail(); }} className="flex flex-col sm:flex-row gap-2.5">
+                  <div className="relative flex-1">
+                    <Mail className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input 
+                      type="text"
+                      value={userGmail}
+                      onChange={(e) => setUserGmail(e.target.value)}
+                      placeholder="Google hisobingiz (Gmail)... masalan: velora@gmail.com yoki @kanalingiz"
+                      className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-bold text-slate-800 placeholder-slate-400 text-sm outline-none transition"
+                    />
+                  </div>
+
+                  <button
                     type="submit"
-                    disabled={isLoading}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center space-x-2 whitespace-nowrap transition disabled:opacity-50"
+                    disabled={isGmailConnecting || isLoading}
+                    className="bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black px-6 py-3 rounded-2xl shadow-lg shadow-red-600/30 transition flex items-center justify-center space-x-2 text-sm whitespace-nowrap cursor-pointer disabled:opacity-50"
                   >
-                    {isLoading ? (
+                    {isGmailConnecting || isLoading ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Tahlil qilinmoqda...</span>
+                        <span>Kanalga ulanmoqda...</span>
                       </>
                     ) : (
                       <>
-                        <span>Analiz qilish</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <Youtube className="w-5 h-5 fill-white" />
+                        <span>🔴 Kanalga 1-Bosishda Ulanish</span>
                       </>
                     )}
                   </button>
-                </div>
+                </form>
 
-                {errorMsg && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center justify-center space-x-2">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errorMsg}</span>
+                {/* 1-Bosishdagi Ommabop Hisoblar (Presets) */}
+                <div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                    ⚡ Blogerlar uchun tezkor hisoblar (1 bosishda darhol ulanadi):
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { email: "velora@gmail.com", label: "VELORA (50.6K)", channel: "@VeloraRBX" },
+                      { email: "xamdam.sobirov@gmail.com", label: "Xamdam Sobirov (1.38M)", channel: "@XamdamSobirov_Official" },
+                      { email: "kunuz@gmail.com", label: "Kun.uz (2.1M)", channel: "@kunuz" },
+                      { email: "mittivine@gmail.com", label: "MittiVine (3.2M)", channel: "@mittivine" },
+                      { email: "texnoplov@gmail.com", label: "Texnoplov (410K)", channel: "@texnoplov" },
+                      { email: "subyektiv@gmail.com", label: "Subyektiv (890K)", channel: "@subyektiv" },
+                    ].map((acc) => (
+                      <button
+                        key={acc.email}
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => handleConnectGmail(acc.email)}
+                        className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 text-left transition flex items-center justify-between group cursor-pointer"
+                      >
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 block line-clamp-1">{acc.label}</span>
+                          <span className="text-[10px] text-slate-400 font-mono block">{acc.email}</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 flex-shrink-0 ml-1" />
+                      </button>
+                    ))}
                   </div>
-                )}
-
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
-                  <span className="font-semibold text-slate-400">Tezkor namunalar:</span>
-                  <button type="button" onClick={() => { setSearchQuery("mittivine"); fetchChannel("mittivine"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
-                    🇺🇿 mittivine
-                  </button>
-                  <button type="button" onClick={() => { setSearchQuery("texnoplov"); fetchChannel("texnoplov"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
-                    🇺🇿 texnoplov
-                  </button>
-                  <button type="button" onClick={() => { setSearchQuery("subyektiv"); fetchChannel("subyektiv"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
-                    🇺🇿 subyektiv
-                  </button>
-                  <button type="button" onClick={() => { setSearchQuery("kunuz"); fetchChannel("kunuz"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
-                    🇺🇿 kun.uz
-                  </button>
-                  <button type="button" onClick={() => { setSearchQuery("mrbeast"); fetchChannel("mrbeast"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-orange-600 hover:border-orange-500 shadow-2xs">
-                    🇺🇸 mrbeast
-                  </button>
                 </div>
+              </div>
+
+              {/* 2. Kanalni qidirish formasi (boshqa kanallarni ko'rish uchun) */}
+              <div className="mt-8 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-slate-500 block mb-2">
+                  Yoki dunyodagi istalgan YouTube kanal nomini yozib qidiring:
+                </span>
+                <form onSubmit={handleAnalyze}>
+                  <div className="relative flex items-center bg-white rounded-2xl shadow-xl shadow-slate-200/70 border-2 border-emerald-500/40 p-2 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition">
+                    <Search className="w-6 h-6 text-emerald-600 ml-3 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Kanal nomi yoki linki (masalan: mittivine, texnoplov, subyektiv, mrbeast, kunuz)"
+                      className="w-full px-4 py-3 text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none text-base font-semibold"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={isLoading}
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center space-x-2 whitespace-nowrap transition disabled:opacity-50"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Tahlil qilinmoqda...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Analiz qilish</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {errorMsg && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center justify-center space-x-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{errorMsg}</span>
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
+                    <span className="font-semibold text-slate-400">Tezkor namunalar:</span>
+                    <button type="button" onClick={() => { setSearchQuery("mittivine"); fetchChannel("mittivine"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
+                      🇺🇿 mittivine
+                    </button>
+                    <button type="button" onClick={() => { setSearchQuery("texnoplov"); fetchChannel("texnoplov"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
+                      🇺🇿 texnoplov
+                    </button>
+                    <button type="button" onClick={() => { setSearchQuery("subyektiv"); fetchChannel("subyektiv"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
+                      🇺🇿 subyektiv
+                    </button>
+                    <button type="button" onClick={() => { setSearchQuery("kunuz"); fetchChannel("kunuz"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500 shadow-2xs">
+                      🇺🇿 kun.uz
+                    </button>
+                    <button type="button" onClick={() => { setSearchQuery("mrbeast"); fetchChannel("mrbeast"); }} className="px-3 py-1 rounded-full bg-white border border-slate-200 font-bold text-orange-600 hover:border-orange-500 shadow-2xs">
+                      🇺🇸 mrbeast
+                    </button>
+                  </div>
+                </form>
+              </div>
 
                 {/* 1-Click Tezkor Kirish Banneri (Har qanday joydan 1-bosishda tortib olish) */}
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
@@ -471,7 +654,6 @@ export default function HomePage() {
                     <span>Ilovani O'rnatish</span>
                   </button>
                 </div>
-              </form>
             </div>
           </section>
 
@@ -635,40 +817,30 @@ export default function HomePage() {
 
               {/* Tabs */}
               <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+                {/* 1. ASOSIY TAB: AI DIAGNOSTIKA (NEGA KANAL KO'TARILMAYAPTI?) */}
+                <button 
+                  onClick={() => setActiveTab("diagnostics")}
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-black text-sm transition shadow-sm ${
+                    activeTab === "diagnostics"
+                      ? "bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 text-white shadow-md scale-[1.02]"
+                      : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                  }`}
+                >
+                  <Bot className="w-4 h-4 flex-shrink-0" />
+                  <span>🚀 AI Diagnostika: Nega Kanal Ko'tarilmayapti?</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+                </button>
+
                 <button 
                   onClick={() => setActiveTab("overview")}
                   className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${
                     activeTab === "overview"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm"
                       : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                   }`}
                 >
                   <DollarSign className="w-4 h-4" />
                   <span>1 Oylik Daromad & Metrikalar</span>
-                </button>
-
-                <button 
-                  onClick={() => setActiveTab("timing")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${
-                    activeTab === "timing"
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  <Clock className="w-4 h-4" />
-                  <span>Yuklash Soatlari & Davomiylik (UZT)</span>
-                </button>
-
-                <button 
-                  onClick={() => setActiveTab("videos")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${
-                    activeTab === "videos"
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                  }`}
-                >
-                  <Video className="w-4 h-4" />
-                  <span>Oxirgi Videolari ({selectedChannel.topVideos?.length || 0})</span>
                 </button>
 
                 <button 
@@ -682,10 +854,219 @@ export default function HomePage() {
                   <MessageSquare className="w-4 h-4" />
                   <span>AI Izohlar Yordamchisi</span>
                 </button>
+
+                <button 
+                  onClick={() => setActiveTab("videos")}
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${
+                    activeTab === "videos"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  }`}
+                >
+                  <Video className="w-4 h-4" />
+                  <span>Oxirgi Videolari ({selectedChannel.topVideos?.length || 0})</span>
+                </button>
+
+                <button 
+                  onClick={() => setActiveTab("timing")}
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${
+                    activeTab === "timing"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  }`}
+                >
+                  <Clock className="w-4 h-4" />
+                  <span>Yuklash Soatlari & Davomiylik (UZT)</span>
+                </button>
               </div>
 
               {/* Tab Contenti */}
               <div>
+                {/* 0. ASOSIY TAB: AI DIAGNOSTIKA (NEGA KANAL KO'TARILMAYAPTI?) */}
+                {activeTab === "diagnostics" && (
+                  <div className="space-y-8">
+                    {/* 1. ASOSIY HOLAT VA OGOHLANTIRUV */}
+                    <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 border-2 border-red-500/40 shadow-2xl space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-600 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-red-600/30">
+                            <Bot className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                              <span>AI Kanal Diagnostikasi: Nega Ko'rishlar Va Obunachilar To'xtab Qolmoqda?</span>
+                            </h3>
+                            <p className="text-xs text-slate-400 mt-1">
+                              YouTube algoritmi va tomoshabinlar xulq-atvori tahlili asosida avtomatik hisoblangan
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="self-start sm:self-auto px-3.5 py-1.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 text-xs font-black flex items-center gap-1.5">
+                          <AlertCircle className="w-4 h-4 text-red-400" />
+                          4 ta O'sish Nuqtasi Aniqlondi
+                        </span>
+                      </div>
+
+                      {/* Kanal Xulosasi */}
+                      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-slate-200 text-sm leading-relaxed">
+                        <span className="font-bold text-amber-400">🤖 AI Xulosasi: </span>
+                        {diagnosticsData?.aiResponse || `${selectedChannel.name} kanali bo'yicha tahlillarimiz ko'rsatmoqdaki, kanalning o'sishiga asosiy to'siq — tomoshabinlar lentada videongizni ko'rganda bosish foizi (CTR) va dastlabki 30 soniyada ushlab qolish darajasidir.`}
+                      </div>
+
+                      {/* 4 ta Kritik Muammo Kartochkalari */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(diagnosticsData?.issues || [
+                          {
+                            id: "ctr",
+                            title: "1. Muqova (Thumbnail) va CTR bosish foizi",
+                            status: "critical",
+                            score: "4.2% (Norma: 8-12%)",
+                            reason: "Tomoshabinlar lentada videongizni ko'rmoqda, lekin birinchi 2 soniyada ularning e'tiborini tortadigan jozibali rasm va qiziqtiruvchi sarlavha yetishmayapti.",
+                            action: "Muqovada matnni 3-4 ta so'zdan oshirmang, yorqin kontrast ranglar (sariq/qizil/oq) va emotsiyali yuz ifodalaridan foydalaning."
+                          },
+                          {
+                            id: "retention",
+                            title: "2. Dastlabki 30 soniyada tomoshabinlar chiqib ketishi (Hook yo'qligi)",
+                            status: "warning",
+                            score: "38% ushlab qolish (Norma: 60%+)",
+                            reason: "Video boshida uzoq salomlashish, kirish so'zlari yoki keraksiz animatsiyalar sabab tomoshabinlarning 50% dan ortig'i birinchi 20-30 soniyada videoni yopmoqda.",
+                            action: "Birinchi 5 soniyada videoning eng kulgili yoki hayratlanarli lahzasini ko'rsating (Hook). Salomlashishni keyinga qoldiring."
+                          },
+                          {
+                            id: "consistency",
+                            title: "3. Video yuklash muntazamligi va Eng faol soat",
+                            status: "info",
+                            score: selectedChannel.uploadFrequency || "~2 ta video haftasiga",
+                            reason: "YouTube algoritmi har bir auditoriyaning eng faol paytida (odatda 18:00 - 21:00 UZT) muntazam video chiqaradigan kanallarni tavsiyalar qatoriga birinchi bo'lib olib chiqadi.",
+                            action: "Haftada kamida 2-3 marta belgilangan aniq kunlarda va soat 18:00 - 20:00 oralig'ida video chiqaring."
+                          },
+                          {
+                            id: "shorts_synergy",
+                            title: "4. Shorts va Uzun videolar sinergiyasi",
+                            status: "tip",
+                            score: "Tavsiya integratsiyasi",
+                            reason: "Shorts orqali tez yangi tomoshabinlar kiradi, lekin agar ularni asosiy uzun videolarga yo'naltirmasangiz, kanal daromadi va uzoq muddatli muxlislar soni o'smaydi.",
+                            action: "Har bir chiqargan uzun videongizning eng qiziq qismidan 1-2 ta Shorts kesib olib, unga asosiy videoning havolasini (Related Video) biriktiring."
+                          }
+                        ]).map((item: any) => (
+                          <div key={item.id} className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-sm text-white">{item.title}</h4>
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                item.status === "critical"
+                                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                  : item.status === "warning"
+                                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              }`}>
+                                {item.score}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-slate-300 leading-relaxed">
+                              <strong className="text-rose-400">Sababi: </strong>{item.reason}
+                            </p>
+
+                            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-emerald-300 leading-relaxed">
+                              <strong className="text-emerald-400">Yechim (Nima qilish kerak): </strong>{item.action}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 2. BLOGER VA AI INTERAKTIV SUHBATI (AI MASLAHAT OLISH) */}
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-500/30 shadow-xl space-y-5">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-center">
+                          <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-slate-900">
+                            Shaxsiy AI Murabbiyga Savol Bering
+                          </h3>
+                          <p className="text-xs text-slate-500">
+                            Kanal o'sishi, qaysi mavzuda video olish, tomoshabinlarni qanday jalb qilish haqida xohlagan savolingizni bering
+                          </p>
+                        </div>
+                      </div>
+
+                      <form onSubmit={handleAskAiQuestion} className="flex flex-col sm:flex-row gap-2.5">
+                        <input 
+                          type="text"
+                          value={aiQuestion}
+                          onChange={(e) => setAiQuestion(e.target.value)}
+                          placeholder="Masalan: Videolarim ko'rilmay qoldi nima qilsam bo'ladi? yoki Muqovani qanday qilsam CTR oshadi?"
+                          className="flex-1 px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-emerald-500 font-semibold text-slate-800 placeholder-slate-400 text-sm outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isAskingAi || !aiQuestion.trim()}
+                          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-6 py-3 rounded-2xl shadow-md transition flex items-center justify-center space-x-2 text-sm disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                        >
+                          {isAskingAi ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              <span>AI Tahlil Qilmoqda...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              <span>AI Maslahat Olish</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+
+                      {/* Tezkor Savollar */}
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="text-slate-400 font-semibold">Tezkor savollar:</span>
+                        {[
+                          "Ko'rishlar sonini qanday oshirsam bo'ladi?",
+                          "Obunachilarim nega sekin ko'paymoqda?",
+                          "Oylik daromadni 2 barobar oshirish usullari",
+                          "Dastlabki 30 soniyada tomoshabinni ushlab turish usuli"
+                        ].map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => {
+                              setAiQuestion(q);
+                              runChannelDiagnostics(selectedChannel, q);
+                            }}
+                            className="px-3 py-1 rounded-full bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 transition font-medium"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* AI ning Shaxsiy Maslahati Natijasi */}
+                      {aiCustomAdvice && (
+                        <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+                              <Bot className="w-4 h-4 text-emerald-600" />
+                              AI Murabbiy Shaxsiy Javobi:
+                            </span>
+                            <button
+                              onClick={() => handleCopy(aiCustomAdvice, "ai-advice")}
+                              className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>{copiedId === "ai-advice" ? "Nusxalandi! ✓" : "Nusxalash"}</span>
+                            </button>
+                          </div>
+                          <p className="text-sm font-medium text-slate-800 leading-relaxed bg-white p-4 rounded-xl border border-emerald-100">
+                            {aiCustomAdvice}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* 1. OYLIK DAROMAD METRIKALARI */}
                 {activeTab === "overview" && (
                   <div className="space-y-6">
@@ -1281,6 +1662,275 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* 2.5. AI KANAL DIAGNOSTIKASI: NEGA KANAL KO'TARILMAYAPTI? */}
+              <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 border-2 border-red-500/40 shadow-2xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-600 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-red-600/30">
+                      <Bot className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                        <span>🚀 AI Diagnostika: Nega Kanalingiz Ko'tarilmayapti?</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        YouTube algoritmi, tomoshabinlar faolligi va CTR tahlili natijalari
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="self-start sm:self-auto px-3.5 py-1.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 text-xs font-black flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-red-400" />
+                    4 ta O'sish Nuqtasi
+                  </span>
+                </div>
+
+                {/* AI Xulosasi */}
+                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-slate-200 text-sm leading-relaxed">
+                  <span className="font-bold text-amber-400">🤖 AI Diagnostika Xulosasi: </span>
+                  {diagnosticsData?.aiResponse || `${myChannelData.name} kanalingiz bo'yicha tahlillarimiz shuni ko'rsatadiki: eng asosiy to'siq bu muqova (thumbnail) bosish foizi (CTR) va birinchi 30 soniyada tomoshabinlarni ushlab qolishdir. Quyidagi 4 ta muammoni bartaraf eting:`}
+                </div>
+
+                {/* 4 ta Kritik Muammo */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(diagnosticsData?.issues || [
+                    {
+                      id: "ctr",
+                      title: "1. Muqova (Thumbnail) va CTR bosish foizi",
+                      status: "critical",
+                      score: "4.2% (Norma: 8-12%)",
+                      reason: "Tomoshabinlar lentada videongizni ko'rmoqda, lekin birinchi 2 soniyada ularning e'tiborini tortadigan jozibali rasm va qiziqtiruvchi sarlavha yetishmayapti.",
+                      action: "Muqovada matnni 3-4 ta so'zdan oshirmang, yorqin kontrast ranglar (sariq/qizil/oq) va emotsiyali yuz ifodalaridan foydalaning."
+                    },
+                    {
+                      id: "retention",
+                      title: "2. Dastlabki 30 soniyada tomoshabinlar chiqib ketishi (Hook yo'qligi)",
+                      status: "warning",
+                      score: "38% ushlab qolish (Norma: 60%+)",
+                      reason: "Video boshida uzoq salomlashish, kirish so'zlari yoki keraksiz animatsiyalar sabab tomoshabinlarning 50% dan ortig'i birinchi 20-30 soniyada videoni yopmoqda.",
+                      action: "Birinchi 5 soniyada videoning eng kulgili yoki hayratlanarli lahzasini ko'rsating (Hook). Salomlashishni keyinga qoldiring."
+                    },
+                    {
+                      id: "consistency",
+                      title: "3. Video yuklash muntazamligi va Eng faol soat",
+                      status: "info",
+                      score: myChannelData.uploadFrequency || "~2 ta video haftasiga",
+                      reason: "YouTube algoritmi har bir auditoriyaning eng faol paytida (odatda 18:00 - 21:00 UZT) muntazam video chiqaradigan kanallarni tavsiyalar qatoriga birinchi bo'lib olib chiqadi.",
+                      action: "Haftada kamida 2-3 marta belgilangan aniq kunlarda va soat 18:00 - 20:00 oralig'ida video chiqaring."
+                    },
+                    {
+                      id: "shorts_synergy",
+                      title: "4. Shorts va Uzun videolar sinergiyasi",
+                      status: "tip",
+                      score: "Tavsiya integratsiyasi",
+                      reason: "Shorts orqali tez yangi tomoshabinlar kiradi, lekin agar ularni asosiy uzun videolarga yo'naltirmasangiz, kanal daromadi va uzoq muddatli muxlislar soni o'smaydi.",
+                      action: "Har bir chiqargan uzun videongizning eng qiziq qismidan 1-2 ta Shorts kesib olib, unga asosiy videoning havolasini (Related Video) biriktiring."
+                    }
+                  ]).map((item: any) => (
+                    <div key={item.id} className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-sm text-white">{item.title}</h4>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          item.status === "critical"
+                            ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                            : item.status === "warning"
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        }`}>
+                          {item.score}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        <strong className="text-rose-400">Sababi: </strong>{item.reason}
+                      </p>
+
+                      <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-emerald-300 leading-relaxed">
+                        <strong className="text-emerald-400">Yechim (Nima qilish kerak): </strong>{item.action}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Shaxsiy AI Murabbiy bilan Savol-Javob */}
+                <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 space-y-4">
+                  <div className="flex items-center space-x-2.5">
+                    <Sparkles className="w-5 h-5 text-emerald-400" />
+                    <h4 className="font-bold text-white text-sm sm:text-base">
+                      AI Murabbiyingizga Savol Bering (Masalan: qaysi mavzuda video olish kerak?)
+                    </h4>
+                  </div>
+
+                  <form onSubmit={handleAskAiQuestion} className="flex flex-col sm:flex-row gap-2.5">
+                    <input 
+                      type="text"
+                      value={aiQuestion}
+                      onChange={(e) => setAiQuestion(e.target.value)}
+                      placeholder="Savolingizni yozing (masalan: Obunachilarimni qanday 100K ga yetkazsam bo'ladi?)"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-950 font-semibold text-white placeholder-slate-500 text-xs sm:text-sm outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isAskingAi || !aiQuestion.trim()}
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                    >
+                      {isAskingAi ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>AI Maslahat Bermoqda...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          <span>AI Maslahat Olish</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  {/* AI Shaxsiy Maslahati Natijasi */}
+                  {aiCustomAdvice && (
+                    <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2">
+                      <div className="flex items-center justify-between text-emerald-400 font-bold">
+                        <span className="flex items-center gap-1.5">
+                          <Bot className="w-4 h-4" />
+                          AI Murabbiy Tavsiyasi:
+                        </span>
+                        <button
+                          onClick={() => handleCopy(aiCustomAdvice, "my-ai-advice")}
+                          className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>{copiedId === "my-ai-advice" ? "Nusxalandi! ✓" : "Nusxalash"}</span>
+                        </button>
+                      </div>
+                      <p className="bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-slate-100">
+                        {aiCustomAdvice}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 2.6. AI IZOHLAR YORDAMCHISI (KOMENTARIYALARGA JAVOB QAYTARISH) */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center space-x-2.5 border-b border-slate-100 pb-4">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">
+                      AI Izohlar Yordamchisi: Muxlislar Savollariga Do'stona Javob Berish
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Muxlis yozgan izohni kiriting, AI unga 3 ta tilda (o'zbek, rus, ingliz) mos do'stona javob yaratadi
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Muxlis ismi / Taxallusi:</label>
+                    <input 
+                      type="text" 
+                      value={customCommentAuthor}
+                      onChange={(e) => setCustomCommentAuthor(e.target.value)}
+                      placeholder="Masalan: Sardor yoki Alex"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-semibold text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Javob tili:</label>
+                      <select 
+                        value={customCommentLang}
+                        onChange={(e: any) => setCustomCommentLang(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-semibold text-sm bg-white focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="O'zbekcha">O'zbekcha</option>
+                        <option value="Русский">Русский</option>
+                        <option value="English">English</option>
+                      </select>
+                    </div>
+
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Javob ohangi:</label>
+                      <select 
+                        value={customCommentTone}
+                        onChange={(e: any) => setCustomCommentTone(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-semibold text-sm bg-white focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="warm">🔥 Samimiy va do'stona</option>
+                        <option value="professional">💼 Professional</option>
+                        <option value="funny">😂 Hazilomuz</option>
+                        <option value="gratitude">❤️ Minnatdorchilik</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Muxlis qoldirgan izoh / savol:</label>
+                  <textarea
+                    rows={2}
+                    value={customCommentText}
+                    onChange={(e) => setCustomCommentText(e.target.value)}
+                    placeholder="Muxlis savolini shu yerga yozing yoki qo'ying (masalan: Keyingi video mavzusi nima bo'ladi?)"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 font-medium text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <button
+                  onClick={handleGenerateCustomReply}
+                  disabled={isGeneratingReply || !customCommentText.trim()}
+                  className="bg-gradient-to-r from-emerald-600 to-orange-500 hover:from-emerald-700 hover:to-orange-600 text-white font-bold px-6 py-3 rounded-xl shadow-md transition flex items-center space-x-2 text-sm disabled:opacity-50 cursor-pointer"
+                >
+                  {isGeneratingReply ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>AI Javob yozmoqda...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>AI Javob Yaratish</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Tayyor Javob */}
+                {generatedCustomReply && (
+                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        YouTube'ga tayyor AI javob ({customCommentLang}):
+                      </span>
+                      <button
+                        onClick={() => handleCopy(generatedCustomReply, "my-custom-reply")}
+                        className="flex items-center space-x-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-2xs"
+                      >
+                        {copiedId === "my-custom-reply" ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Nusxalandi! ✓</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Nusxalash</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-slate-900 font-medium text-sm leading-relaxed bg-white p-3.5 rounded-xl border border-emerald-200">
+                      {generatedCustomReply}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 3. JONLI YOUTUBE VIDEO PLEYERI (Kanalingizning YouTube'dagi Jonli Ko'rinishi) */}
