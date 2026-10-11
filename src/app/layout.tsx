@@ -45,10 +45,10 @@ export const metadata: Metadata = {
     siteName: "Vidoor",
     images: [
       {
-        url: "/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "Vidoor YouTube Analytics",
+        url: "/og-image.jpg",
+        width: 1024,
+        height: 1024,
+        alt: "Vidoor YouTube Analytics Official Emblem",
       },
     ],
   },
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "⚡ Vidoor — VidIQ Bepul Muqobili & YouTube Analitika",
     description: "YouTube kanallar daromadi, 7 kunlik ko'rishlari va eng maqbul video vaqti tahlili.",
-    images: ["/icon-512.png"],
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,

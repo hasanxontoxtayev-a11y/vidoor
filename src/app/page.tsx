@@ -218,14 +218,16 @@ export default function HomePage() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => { setViewMode("explore"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-orange-500 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white font-black text-xl tracking-wider">
-              V
-            </div>
+            <img 
+              src="/vidoor-emblem.jpg" 
+              alt="Vidoor Rasmiy Emblemasi" 
+              className="w-10 h-10 rounded-xl object-cover shadow-md shadow-emerald-500/20 border border-emerald-400/40 hover:scale-105 transition"
+            />
             <div>
-              <span className="text-2xl font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-orange-500 bg-clip-text text-transparent">
-                Vidoor
+              <span className="text-2xl font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-1.5">
+                Vidoor <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500 text-white font-bold tracking-normal">AI</span>
               </span>
-              <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span className="hidden sm:inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                 VidIQ Standarti • 100% Bepul
               </span>
             </div>
@@ -277,6 +279,26 @@ export default function HomePage() {
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.emerald.100),theme(colors.orange.50),white)] opacity-70" />
             
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              {/* Rasmiy Vidoor Emblemasi */}
+              <div className="flex flex-col items-center justify-center mb-6">
+                <div 
+                  className="relative group cursor-pointer" 
+                  onClick={() => { setShowExtensionModal(true); setExtensionTab("chrome-home"); }}
+                  title="Vidoor Rasmiy Emblemasi — Chrome'ga qo'shish uchun bosing"
+                >
+                  <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-emerald-500 via-teal-400 to-orange-500 opacity-70 blur-md group-hover:opacity-100 transition duration-500 animate-pulse" />
+                  <img 
+                    src="/vidoor-emblem.jpg" 
+                    alt="Vidoor Rasmiy Emblemasi" 
+                    className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover shadow-2xl border-2 border-white/90 group-hover:scale-105 transition duration-300"
+                  />
+                </div>
+                <span className="mt-2.5 text-[11px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-300 shadow-2xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  Vidoor Rasmiy Emblemasi ⚡
+                </span>
+              </div>
+
               <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs sm:text-sm font-bold mb-6 shadow-sm">
                 <Flame className="w-4 h-4 text-orange-500" />
                 <span>VidIQ Quick Stats standartidagi 100% aniq oylik daromad va statistika</span>
@@ -1047,8 +1069,71 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* 3. SEO & GOOGLE QIDIRUVIDA TOPISH VA EMBLEMA BO'LIMI */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-8 sm:p-10 border border-slate-800 shadow-xl space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-8">
+            <div className="flex items-center space-x-4">
+              <img 
+                src="/vidoor-emblem.jpg" 
+                alt="Vidoor Emblemasi" 
+                className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-400 shadow-lg shadow-emerald-500/20"
+              />
+              <div>
+                <h3 className="text-2xl font-black text-white flex items-center gap-2">
+                  <span>Vidoor ⚡ Emblemasi va Brendi</span>
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Rasmiy
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Letter V + YouTube Play tugmasi + Moliyaviy tahlil o'sish grafiki mujassamlashgan zamonaviy emblema
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { setShowExtensionModal(true); setExtensionTab("chrome-home"); }}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs transition shadow-md cursor-pointer self-start md:self-auto"
+            >
+              <Star className="w-4 h-4 fill-white" />
+              <span>Chrome Bosh Sahifasiga Qo'shish</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-300">
+            {/* Muhim Eslatma: Google qidiruvi vs Brauzer manzil qatori */}
+            <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-2.5">
+              <span className="font-bold text-amber-400 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400" />
+                Google Qidiruvi va Brauzer Manzil Qatori Farqi:
+              </span>
+              <p className="leading-relaxed text-slate-300">
+                1. <strong>Brauzer manzil qatori (URL bar - yuqoridagi qator):</strong> Ushbu qatorga to'g'ridan-to'g'ri <code className="bg-slate-900 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold">vidoor.vercel.app</code> deb yozsangiz, Google qidiruvisiz darhol sayt ochiladi!
+              </p>
+              <p className="leading-relaxed text-slate-300">
+                2. <strong>Google qidiruv maydoni (google.com):</strong> Google qidiruv tizimi yangi saytlarni o'zining indeks bazasiga kiritishi uchun GoogleBot robotlari tomonidan 1-3 kun davomida tekshiriladi. Biz sayt xaritasini (Sitemap) va Rich Snippets'ni Google tizimiga to'liq ulab qo'ydik.
+              </p>
+            </div>
+
+            {/* Qanday oson eslab qolish mumkin */}
+            <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-2.5">
+              <span className="font-bold text-emerald-400 text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                Vidoor-ga 1 soniyada kirish usullari:
+              </span>
+              <ul className="space-y-1.5 text-slate-300 list-disc list-inside leading-relaxed">
+                <li>Chrome bosh sahifasida (New Tab) <strong>"Yorliq qo'shish"</strong> tugmasiga Vidoor-ni saqlab qo'yish.</li>
+                <li><strong>"⚡ Vidoor Tahlil"</strong> xatcho'pini brauzer paneliga sudrab qo'yish.</li>
+                <li>Chrome manzil qatoriga <code className="bg-slate-900 text-emerald-400 px-1.5 py-0.5 rounded font-mono">vidoor.vercel.app</code> yozib, <kbd className="bg-slate-700 text-white px-1.5 py-0.5 rounded font-mono">TAB</kbd> bosish.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-8 mt-16">
+      <footer className="bg-white border-t border-slate-200 py-8 mt-6">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
           <p>© 2026 Vidoor. VidIQ va SocialBlade darajasidagi bepul tahlil platformasi. Barcha huquqlar himoyalangan.</p>
         </div>
