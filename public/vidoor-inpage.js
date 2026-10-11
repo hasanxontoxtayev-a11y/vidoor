@@ -266,15 +266,25 @@
       }
     }
 
-    container.innerHTML = `
-      <div class="vidoor-card" style="text-align: center; padding: 25px;">
-        <span style="font-size: 15px; font-weight: 800; color: #10b981;">⚡ Vidoor AI: "${channelQuery}" kanali YouTube ichida tahlil qilinmoqda...</span>
-      </div>
-    `;
-
     try {
-      const res = await fetch(`https://vidoor.vercel.app/api/youtube?query=${encodeURIComponent(channelQuery)}`);
-      const data = await res.json();
+      let data = null;
+      try {
+        const cached = sessionStorage.getItem('vidoor_cache_' + channelQuery);
+        if (cached) data = JSON.parse(cached);
+      } catch (e) {}
+
+      if (!data) {
+        container.innerHTML = `
+          <div class="vidoor-card" style="text-align: center; padding: 25px;">
+            <span style="font-size: 15px; font-weight: 800; color: #10b981;">⚡ Vidoor AI: "${channelQuery}" kanali tahlil qilinmoqda...</span>
+          </div>
+        `;
+        const res = await fetch(`https://vidoor.vercel.app/api/youtube?query=${encodeURIComponent(channelQuery)}`);
+        data = await res.json();
+        if (data && !data.error) {
+          try { sessionStorage.setItem('vidoor_cache_' + channelQuery, JSON.stringify(data)); } catch (e) {}
+        }
+      }
 
       if (!data || data.error) {
         container.innerHTML = `

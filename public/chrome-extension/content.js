@@ -68,6 +68,8 @@
     return { element: fallback, isVideo: false, isFallback: true };
   }
 
+  const vidoorCache = new Map();
+
   async function injectVidoorWidget() {
     const channelQuery = detectChannel();
     if (!channelQuery) return;
@@ -92,15 +94,28 @@
       }
     }
 
-    container.innerHTML = `
-      <div class="vidoor-card" style="text-align: center; padding: 18px;">
-        <span style="font-size: 13px; font-weight: bold; color: #10b981;">⚡ Vidoor AI: "${channelQuery}" kanali YouTube ichida tahlil qilinmoqda...</span>
-      </div>
-    `;
-
     try {
-      const res = await fetch(`https://vidoor.vercel.app/api/youtube?query=${encodeURIComponent(channelQuery)}`);
-      const data = await res.json();
+      let data = vidoorCache.get(channelQuery);
+      if (!data) {
+        try {
+          const cached = sessionStorage.getItem('vidoor_cache_' + channelQuery);
+          if (cached) data = JSON.parse(cached);
+        } catch (e) {}
+      }
+
+      if (!data) {
+        container.innerHTML = `
+          <div class="vidoor-card" style="text-align: center; padding: 18px;">
+            <span style="font-size: 13px; font-weight: bold; color: #10b981;">⚡ Vidoor AI: "${channelQuery}" kanali tahlil qilinmoqda...</span>
+          </div>
+        `;
+        const res = await fetch(`https://vidoor.vercel.app/api/youtube?query=${encodeURIComponent(channelQuery)}`);
+        data = await res.json();
+        if (data && !data.error) {
+          vidoorCache.set(channelQuery, data);
+          try { sessionStorage.setItem('vidoor_cache_' + channelQuery, JSON.stringify(data)); } catch (e) {}
+        }
+      }
 
       if (!data || data.error) {
         isProcessing = false;

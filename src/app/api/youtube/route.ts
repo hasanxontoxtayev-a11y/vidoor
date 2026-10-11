@@ -511,6 +511,12 @@ export async function GET(request: Request) {
       aiInsight: `Vidoor Professional Tahlili: "${targetTitle}" kanali o'zining ${totalVideos} va ${totalViews} ko'rishlari bilan haftasiga ${weeklyViewsGained.toLocaleString()} ko'rish to'plamoqda. Ushbu ko'rsatkich bo'yicha kanalning 1 oylik o'rtacha daromadi taxminan ${monthlyDisplaySingle} (${monthlyRangeK}) ni tashkil qiladi.`,
       topVideos: topVideos,
       sampleComments: sampleComments
+    }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=86400",
+        "CDN-Cache-Control": "public, s-maxage=1800",
+        "Vercel-CDN-Cache-Control": "public, s-maxage=1800"
+      }
     });
   } catch (err: any) {
     console.error("Scraper error:", err);
