@@ -33,10 +33,10 @@ Davom etish uchun sun'iy intellekt yordamchingizga **"keyingi qadam"** deb yozis
 ---
 
 ## Step 3 — Kanal tahlilchisi (Analitika: vaqtlar, davomiylik, RPM va daromad)
-- [ ] YouTube kanallari ma'lumotlarini tahlil qilish funksiyasini ulash.
-- [ ] Videolar asosan qaysi soatlarda yuklanishi va necha daqiqalik ekanligini hisoblash.
-- [ ] Kanal yo'nalishi (niche) bo'yicha taxminiy **RPM** (1000 ko'rish narxi) va oylik daromad kalkulyatorini chiqarish.
-- [ ] AI xulosa va tavsiya blokini qo'shish (Gemini orqali).
+- [x] YouTube kanallari ma'lumotlarini tahlil qilish funksiyasini ulash.
+- [x] Videolar asosan qaysi soatlarda yuklanishi va necha daqiqalik ekanligini hisoblash.
+- [x] Kanal yo'nalishi (niche) bo'yicha taxminiy **RPM** (1000 ko'rish narxi) va oylik daromad kalkulyatorini chiqarish.
+- [x] AI xulosa va tavsiya blokini qo'shish (Gemini orqali).
 **Nimani o'rganasiz:** API (Application Programming Interface) nima va u orqali qanday qilib ma'lumotlar olinadi.  
 **Qanday tekshirasiz:** Haqiqiy YouTube kanal linkini kiritasiz va uning soatlari, RPM va AI tavsiyalari chiqadi.
 
