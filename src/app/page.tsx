@@ -104,28 +104,35 @@ export default function HomePage() {
       // Avtomatik saqlangan Gmail hisobini yuklash
       const savedEmail = localStorage.getItem("vidoor_user_gmail");
       if (savedEmail) {
-        setUserGmail(savedEmail);
-        setGmailConnected(true);
+        if (savedEmail.toLowerCase().includes("velora")) {
+          localStorage.removeItem("vidoor_user_gmail");
+          setUserGmail("");
+          setGmailConnected(false);
+        } else {
+          setUserGmail(savedEmail);
+          setGmailConnected(true);
+        }
       }
 
       // Avtomatik saqlangan shaxsiy kanalni yuklash
       const saved = localStorage.getItem("vidoor_connected_channel");
       if (saved) {
         try {
-          const parsed = JSON.parse(saved);
-          // Agar avvalgi testdan qolib ketgan Velora bo'lsa darhol tozalash
-          if (parsed && (parsed.name?.toLowerCase().includes("velora") || parsed.handle?.toLowerCase().includes("velora"))) {
+          if (saved.toLowerCase().includes("velora")) {
             localStorage.removeItem("vidoor_connected_channel");
             localStorage.removeItem("vidoor_user_gmail");
             setMyChannelData(null);
             setMyChannelConnected(false);
           } else {
+            const parsed = JSON.parse(saved);
             setMyChannelData(parsed);
             setSelectedChannel(parsed);
             setMyChannelConnected(true);
             runChannelDiagnostics(parsed);
           }
-        } catch (e) {}
+        } catch (e) {
+          localStorage.removeItem("vidoor_connected_channel");
+        }
       }
 
       const handler = (e: any) => {
@@ -293,7 +300,11 @@ export default function HomePage() {
       // Avtomatik AI Diagnostikani ishga tushirish
       runChannelDiagnostics(data);
       setShowGoogleModal(false);
+      setViewMode("myChannel");
       setIsLoading(false);
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } catch (e: any) {
       setErrorMsg("Ulanishda xatolik yuz berdi: " + (e?.message || "Noma'lum"));
       setIsLoading(false);
@@ -554,7 +565,7 @@ export default function HomePage() {
                       type="text"
                       value={userGmail}
                       onChange={(e) => setUserGmail(e.target.value)}
-                      placeholder="Google hisobingiz (Gmail)... masalan: velora@gmail.com yoki @kanalingiz"
+                      placeholder="Google hisobingiz (Gmail)... masalan: kanalingiz@gmail.com yoki @kanalingiz"
                       className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-bold text-slate-800 placeholder-slate-400 text-sm outline-none transition"
                     />
                   </div>
@@ -2629,9 +2640,9 @@ export default function HomePage() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { handle: "@VeloraRBX", label: "VELORA (50.6K)" },
-                      { handle: "kunuz", label: "Kun.uz (2.1M)" },
-                      { handle: "mittivine", label: "MittiVine (3.2M)" },
+                      { handle: "@XamdamSobirov_Official", label: "Xamdam Sobirov (1.38M)" },
+                      { handle: "kunuz", label: "Kun.uz (4.18M)" },
+                      { handle: "mittivine", label: "MittiVine (2.21M)" },
                       { handle: "texnoplov", label: "Texnoplov (410K)" },
                       { handle: "subyektiv", label: "Subyektiv (890K)" },
                       { handle: "mrbeast", label: "MrBeast (300M+)" }
@@ -2644,7 +2655,7 @@ export default function HomePage() {
                           handleAutoConnectGoogle(item.handle);
                         }}
                         className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition cursor-pointer ${
-                          item.handle === "@VeloraRBX"
+                          item.handle === "@XamdamSobirov_Official"
                             ? "bg-red-50 text-red-700 border-red-200 font-bold hover:bg-red-100"
                             : "bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 border-slate-200"
                         }`}

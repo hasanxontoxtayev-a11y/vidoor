@@ -39,9 +39,6 @@ export async function GET(request: Request) {
       .trim();
 
     let targetHandle = clean.startsWith('@') ? clean : `@${clean}`;
-    if (clean.toLowerCase() === 'velora' || clean.toLowerCase() === 'velorarbx') {
-      targetHandle = '@VeloraRBX';
-    }
     let targetId = clean.startsWith('UC') ? clean : '';
     let targetTitle = clean;
     let targetAvatar = '';
