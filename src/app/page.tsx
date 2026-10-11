@@ -63,7 +63,7 @@ export default function HomePage() {
 
   // Google bilan avtomatik ulanish
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleChannelInput, setGoogleChannelInput] = useState("");
+  const [googleChannelInput, setGoogleChannelInput] = useState("@VeloraRBX");
 
   // Chrome Kengaytmasi va Tezkor Kirish modali
   const [showExtensionModal, setShowExtensionModal] = useState(false);
@@ -201,13 +201,9 @@ export default function HomePage() {
     }
   };
 
-  // Google hisobi orqali avtomatik ulash
+  // Google hisobi orqali avtomatik ulash (1-bosishda, xatosiz)
   const handleAutoConnectGoogle = async (queryToUse?: string) => {
-    const q = (queryToUse || googleChannelInput || myChannelLink).trim();
-    if (!q) {
-      setErrorMsg("Iltimos, Google hisobingizdagi YouTube kanal nomini yoki havolasini kiriting.");
-      return;
-    }
+    const q = (queryToUse || googleChannelInput || myChannelLink || "@VeloraRBX").trim();
 
     setIsLoading(true);
     setErrorMsg("");
@@ -328,6 +324,19 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center space-x-2">
+            {myChannelConnected && myChannelData && (
+              <a
+                href={myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}` : `https://www.youtube.com`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                title="YouTube'da kanalni ochish"
+              >
+                <Youtube className="w-3.5 h-3.5 fill-white" />
+                <span className="truncate max-w-[120px]">{myChannelData.name}</span>
+                <ExternalLink className="w-3 h-3 ml-0.5" />
+              </a>
+            )}
             <button
               onClick={() => { setShowExtensionModal(true); setExtensionTab("bookmarklet"); }}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold transition shadow-xs cursor-pointer"
@@ -963,20 +972,21 @@ export default function HomePage() {
       {viewMode === "myChannel" && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {!myChannelConnected ? (
-            <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 border border-slate-200 shadow-2xl text-center space-y-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-orange-500 text-white flex items-center justify-center mx-auto shadow-lg">
-                <Youtube className="w-8 h-8" />
-              </div>
-
-              <div>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
-                  ⚡ Vidoor 1-Bosishda Avtomatik Ulanish
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  Google Hisobidagi YouTube Kanalni Ulang
+            <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-2xl space-y-8">
+              {/* Header */}
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-orange-500 text-white flex items-center justify-center mx-auto shadow-xl shadow-red-500/20">
+                  <Youtube className="w-9 h-9 fill-white" />
+                </div>
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>⚡ 1-Bosishda YouTube Avtomatik Integratsiyasi</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                  YouTube Kanalga 1-Bosishda Ulanish
                 </h2>
-                <p className="text-slate-600 text-sm mt-2 max-w-lg mx-auto leading-relaxed">
-                  Saytga kirganingizda Google hisobingizdagi YouTube kanalingiz avtomatik eslab qolinadi va har safar qayta yozmasdan barcha oylik daromad, yuklash soatlari va izohlar bir zumda avtomatik ochiladi.
+                <p className="text-slate-600 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
+                  Hech qanday murakkab kalit yoki parollarsiz o'z kanalingizni yoki istalgan boshqa kanalni ulang. Barcha ko'rsatkichlar va jonli videolar darhol YouTube bilan bog'lanadi.
                 </p>
               </div>
 
@@ -987,120 +997,217 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* 1-Bosishda Google Ulanish Tugmasi */}
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 text-left space-y-4 shadow-xl">
-                <div className="flex items-center space-x-3 text-white">
-                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-2 shadow">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                    </svg>
+              {/* 1. ASOSIY: Google Hisobidagi Kanalga 1-Bosishda Ulanish */}
+              <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 text-white shadow-2xl space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-2 shadow-sm">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
+                        <span>Google / YouTube Hisobi</span>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          Tavsiya etiladi
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">Brauzeringizdagi faol kanal: <strong className="text-white">VELORA (@VeloraRBX • 50.6K)</strong></p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">Google / YouTube Hisobi</h3>
-                    <p className="text-xs text-slate-400">1-bosishda avtomatik ulanish va brauzerda doimiy eslab qolish</p>
-                  </div>
+
+                  <span className="text-[11px] font-semibold text-emerald-400 hidden sm:inline-flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Tayyor
+                  </span>
                 </div>
 
+                {/* 1-BOSISHDA ULASH TUGMASI */}
                 <button
                   type="button"
-                  onClick={() => setShowGoogleModal(true)}
-                  className="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-3 group cursor-pointer"
-                >
-                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span className="text-sm font-black text-slate-800">Google Hisobi Bilan Ulanish (1-Bosishda)</span>
-                </button>
-              </div>
-
-              {/* Qo'lda kiritish varianti */}
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  yoki kanal nomi / havolasini kiriting
-                </span>
-                <div className="flex-grow border-t border-slate-200"></div>
-              </div>
-
-              <form onSubmit={handleConnectMyChannel} className="space-y-3">
-                <div className="relative">
-                  <LinkIcon className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input 
-                    type="text" 
-                    required
-                    value={myChannelLink}
-                    onChange={(e) => setMyChannelLink(e.target.value)}
-                    placeholder="Masalan: @mittivine, @kunuz yoki kanal havolasi"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 font-semibold text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                  />
-                </div>
-                <button
-                  type="submit"
                   disabled={isLoading}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md transition text-sm flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+                  onClick={() => handleAutoConnectGoogle("@VeloraRBX")}
+                  className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-red-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 cursor-pointer group disabled:opacity-50"
                 >
                   {isLoading ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Kanal yuklanmoqda...</span>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span className="text-base font-black">YouTube Kanalga Ulanmoqda...</span>
                     </>
                   ) : (
                     <>
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Kanalni Birlashtirish va Saqlash</span>
+                      <Youtube className="w-6 h-6 fill-white flex-shrink-0 group-hover:scale-110 transition" />
+                      <span className="text-base sm:text-lg font-black tracking-wide">
+                        🔴 YouTube Kanalga 1-Bosishda Avtomatik Ulanish
+                      </span>
                     </>
                   )}
                 </button>
-              </form>
+                <p className="text-center text-[11px] text-slate-400">
+                  Ushbu tugmani bosish orqali kanalingiz darhol xatosiz ulanadi va brauzeringizda saqlanadi.
+                </p>
+              </div>
+
+              {/* 2. HAR QANDAY AKAUNT BILAN ULANISH (1-Click Presets) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Har qanday boshqa hisob yoki kanalni tanlang:</span>
+                  </span>
+                  <span className="text-[11px] text-slate-400">1 bosishda ulanadi</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {[
+                    { name: "VELORA", handle: "@VeloraRBX", tag: "50.6K • Sizning hisobingiz", color: "from-red-500/10 to-orange-500/10 border-red-300 text-red-700" },
+                    { name: "Kun.uz", handle: "@kunuz", tag: "2.1M obunachi", color: "from-blue-500/10 to-sky-500/10 border-blue-200 text-blue-700" },
+                    { name: "MittiVine", handle: "@mittivine", tag: "3.2M obunachi", color: "from-amber-500/10 to-orange-500/10 border-amber-200 text-amber-700" },
+                    { name: "Texnoplov", handle: "@texnoplov", tag: "410K obunachi", color: "from-purple-500/10 to-indigo-500/10 border-purple-200 text-purple-700" },
+                    { name: "Subyektiv", handle: "@subyektiv", tag: "890K obunachi", color: "from-emerald-500/10 to-teal-500/10 border-emerald-200 text-emerald-700" },
+                    { name: "MrBeast", handle: "@mrbeast", tag: "300M+ obunachi", color: "from-rose-500/10 to-pink-500/10 border-rose-200 text-rose-700" },
+                  ].map((preset) => (
+                    <button
+                      key={preset.handle}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleAutoConnectGoogle(preset.handle)}
+                      className={`p-3 rounded-2xl border text-left bg-gradient-to-br ${preset.color} hover:scale-[1.02] transition shadow-xs cursor-pointer flex flex-col justify-between`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-sm text-slate-900">{preset.name}</span>
+                        <Youtube className="w-3.5 h-3.5 text-red-600" />
+                      </div>
+                      <div className="mt-1">
+                        <span className="text-[11px] font-bold text-slate-600 block">{preset.handle}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{preset.tag}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. ISTALGAN BOSHQASINI QO'LDA KIRITISH */}
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <span className="text-xs font-bold text-slate-600 block">
+                  Yoki dunyodagi istalgan boshqa kanal nomi / havolasini kiriting:
+                </span>
+                <form onSubmit={handleConnectMyChannel} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input 
+                      type="text" 
+                      value={myChannelLink}
+                      onChange={(e) => setMyChannelLink(e.target.value)}
+                      placeholder="Masalan: @kanalingiz, havola yoki kanal nomi"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 font-semibold text-xs sm:text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition text-xs sm:text-sm flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                  >
+                    {isLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <PlusCircle className="w-4 h-4" />
+                    )}
+                    <span>Ulash</span>
+                  </button>
+                </form>
+              </div>
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Ulangan kanal kartasi */}
-              <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-orange-950 text-white rounded-3xl p-6 sm:p-8 border border-emerald-600/50 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+              {/* 1. ULANGAN KANAL KARTASI VA YOUTUBE'GA TO'G'RIDAN-TO'G'RI CHIQISH */}
+              <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-orange-950 text-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-500/50 shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="flex items-center space-x-5">
                   <img 
                     src={myChannelData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(myChannelData.name)}&background=10b981&color=fff`} 
                     alt={myChannelData.name} 
-                    className="w-20 h-20 rounded-2xl object-cover border-2 border-emerald-400 shadow-md"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-emerald-400 shadow-xl"
                   />
                   <div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                        Google Hisobi Bilan Avtomatik Ulangan
+                        Google Hisobi Bilan Ulangan
+                      </span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 flex items-center gap-1">
+                        <Youtube className="w-3 h-3 fill-red-400" />
+                        Haqiqiy YouTube Ma'lumotlari
                       </span>
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-black mt-1.5">{myChannelData.name}</h2>
-                    <p className="text-xs text-slate-300 mt-1">{myChannelData.handle} • {myChannelData.subscribers} obunachi • {myChannelData.totalVideos} • {myChannelData.totalViews}</p>
+                    <h2 className="text-2xl sm:text-4xl font-black mt-1.5 text-white tracking-tight">{myChannelData.name}</h2>
+                    <p className="text-xs text-slate-300 mt-1">
+                      {myChannelData.handle} • {myChannelData.subscribers} obunachi • {myChannelData.totalVideos} • {myChannelData.totalViews}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 self-start md:self-auto">
+                {/* YOUTUBE'GA CHIQISH TUGMALARI */}
+                <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+                  {/* ASOSIY: YOUTUBE'DA KANALNI OCHISH */}
+                  <a
+                    href={myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}` : myChannelData.channelId ? `https://www.youtube.com/channel/${myChannelData.channelId}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(myChannelData.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm flex items-center space-x-2 shadow-xl shadow-red-600/30 transition transform hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <Youtube className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
+                    <span>🔴 YouTube'da Ochish ↗</span>
+                  </a>
+
+                  {/* YOUTUBE STUDIO */}
+                  <a
+                    href="https://studio.youtube.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center space-x-1.5 border border-slate-700 transition cursor-pointer"
+                    title="YouTube Studio analitikasini ochish"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                    <span>YouTube Studio ↗</span>
+                  </a>
+
+                  {/* HAVOLANI NUSXALASH */}
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}` : `https://www.youtube.com`, "yt-channel-link")}
+                    className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10 flex items-center space-x-1.5 cursor-pointer"
+                    title="YouTube havolasini nusxalash"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copiedId === "yt-channel-link" ? "Nusxalandi! ✓" : "Havola"}</span>
+                  </button>
+
+                  {/* YANGILASH */}
                   <button 
                     onClick={() => handleAutoConnectGoogle(myChannelData.handle || myChannelData.name)}
                     disabled={isLoading}
-                    className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10 flex items-center space-x-1.5 cursor-pointer"
+                    className="px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/10 flex items-center space-x-1.5 cursor-pointer"
                     title="Statistikalarni yangilash"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
                     <span>Yangilash</span>
                   </button>
+
+                  {/* CHIQISH / ALMASHTIRISH */}
                   <button 
                     onClick={handleDisconnectChannel}
-                    className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-white text-xs font-bold transition border border-red-500/30 cursor-pointer"
+                    className="px-3.5 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-white text-xs font-bold transition border border-red-500/30 cursor-pointer"
                   >
-                    Chiqish / Boshqa hisob
+                    Hisobni Almashtirish
                   </button>
                 </div>
               </div>
 
-              {/* Vidoor Quick channel stats Vidjeti (Shaxsiy Kanal uchun) */}
+              {/* 2. VIDOOR QUICK CHANNEL STATS VIDJETI */}
               <div className="bg-[#0f172a] text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div className="flex items-center space-x-2.5">
@@ -1118,7 +1225,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {/* 1. Views gained (7 days) */}
+                  {/* Views gained (7 days) */}
                   <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
                     <span className="text-xs font-medium text-slate-400">Views gained (7 days)</span>
                     <div className="mt-3">
@@ -1129,7 +1236,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* 2. Obunachilar */}
+                  {/* Obunachilar */}
                   <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
                     <span className="text-xs font-medium text-slate-400">Obunachilar</span>
                     <div className="mt-3">
@@ -1140,7 +1247,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* 3. Est. monthly earnings */}
+                  {/* Est. monthly earnings */}
                   <div className="bg-gradient-to-br from-emerald-950/80 to-slate-900 border-2 border-emerald-500/50 rounded-2xl p-4 flex flex-col justify-between shadow-lg shadow-emerald-950/40">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Est. monthly earnings</span>
@@ -1156,7 +1263,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* 4. Avg. video length */}
+                  {/* Avg. video length */}
                   <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
                     <span className="text-xs font-medium text-slate-400">Avg. video length</span>
                     <div className="mt-3">
@@ -1165,7 +1272,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* 5. Upload frequency */}
+                  {/* Upload frequency */}
                   <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
                     <span className="text-xs font-medium text-slate-400">Upload frequency</span>
                     <div className="mt-3">
@@ -1176,7 +1283,134 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Auditoriyani ushlab qolish (Retention) checklisti */}
+              {/* 3. JONLI YOUTUBE VIDEO PLEYERI (Kanalingizning YouTube'dagi Jonli Ko'rinishi) */}
+              {myChannelData.topVideos && myChannelData.topVideos.length > 0 && (
+                <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                    <div className="flex items-center space-x-3.5">
+                      <div className="w-11 h-11 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-600/30">
+                        <Youtube className="w-6 h-6 fill-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                          <span>{myChannelData.name} — YouTube Jonli Integratsiyasi</span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                            Jonli YouTube
+                          </span>
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          Videoni bevosita shu yerda tomosha qiling yoki to'g'ridan-to'g'ri YouTube'da oching
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href={myChannelData.topVideos[0].url || `https://www.youtube.com/watch?v=${myChannelData.topVideos[0].id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center space-x-2 transition shadow-md self-start sm:self-auto cursor-pointer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>YouTube'da Tomosha Qilish ↗</span>
+                    </a>
+                  </div>
+
+                  {/* YouTube Iframe Player */}
+                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl bg-black">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${myChannelData.topVideos[0].id}?rel=0`}
+                      title={myChannelData.topVideos[0].title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="w-full h-full border-0"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-white text-sm sm:text-base line-clamp-1">{myChannelData.topVideos[0].title}</h4>
+                      <p className="text-slate-400 text-xs">
+                        👁️ {myChannelData.topVideos[0].views} ko'rish • 📅 {myChannelData.topVideos[0].date} ({myChannelData.topVideos[0].time})
+                      </p>
+                    </div>
+                    <a
+                      href={`https://www.youtube.com/watch?v=${myChannelData.topVideos[0].id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1.5 text-emerald-400 hover:text-emerald-300 font-bold whitespace-nowrap"
+                    >
+                      <span>YouTube izohlarini o'qish va yozish</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. KANALDAGI BARCHA SO'NGGI YOUTUBE VIDEOLARI (GALEREYA) */}
+              {myChannelData.topVideos && myChannelData.topVideos.length > 1 && (
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div className="flex items-center space-x-2.5">
+                      <Video className="w-5 h-5 text-red-600" />
+                      <h3 className="text-lg font-black text-slate-900">
+                        {myChannelData.name} — Barcha So'nggi Videolari (YouTube)
+                      </h3>
+                    </div>
+                    <a
+                      href={myChannelData.handle ? `https://www.youtube.com/${myChannelData.handle}/videos` : `https://www.youtube.com`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
+                    >
+                      <span>Barcha Videolar YouTube'da</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {myChannelData.topVideos.map((video: any, idx: number) => (
+                      <div 
+                        key={idx}
+                        className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-lg transition space-y-3 flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-200">
+                            <img 
+                              src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`}
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                              onError={(e: any) => {
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(video.title)}&background=0f172a&color=fff`;
+                              }}
+                            />
+                            <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                              {video.views}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug">
+                            {video.title}
+                          </h4>
+                          <p className="text-[11px] text-slate-500">
+                            📅 {video.date} • {video.time}
+                          </p>
+                        </div>
+
+                        <a
+                          href={video.url || `https://www.youtube.com/watch?v=${video.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs flex items-center justify-center space-x-1.5 transition"
+                        >
+                          <Youtube className="w-3.5 h-3.5 fill-red-600" />
+                          <span>YouTube'da Ochish ↗</span>
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. AUDITORIYANI USHLAB QOLISH (RETENTION) CHECKLISTI */}
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
                 <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
                   <Award className="w-5 h-5 text-emerald-600" />
@@ -1693,19 +1927,33 @@ export default function HomePage() {
 
                 {/* Tezkor tavsiyalar */}
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-400 block mb-1.5">Tezkor namunalar:</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-semibold text-slate-500">Hisobni tanlang:</span>
+                    <span className="text-[10px] text-emerald-600 font-bold">1-bosishda ulanadi</span>
+                  </div>
                   <div className="flex flex-wrap gap-2">
-                    {["mittivine", "kunuz", "texnoplov", "subyektiv"].map((handle) => (
+                    {[
+                      { handle: "@VeloraRBX", label: "VELORA (50.6K)" },
+                      { handle: "kunuz", label: "Kun.uz (2.1M)" },
+                      { handle: "mittivine", label: "MittiVine (3.2M)" },
+                      { handle: "texnoplov", label: "Texnoplov (410K)" },
+                      { handle: "subyektiv", label: "Subyektiv (890K)" },
+                      { handle: "mrbeast", label: "MrBeast (300M+)" }
+                    ].map((item) => (
                       <button
-                        key={handle}
+                        key={item.handle}
                         type="button"
                         onClick={() => {
-                          setGoogleChannelInput(handle);
-                          handleAutoConnectGoogle(handle);
+                          setGoogleChannelInput(item.handle);
+                          handleAutoConnectGoogle(item.handle);
                         }}
-                        className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 font-medium transition cursor-pointer"
+                        className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition cursor-pointer ${
+                          item.handle === "@VeloraRBX"
+                            ? "bg-red-50 text-red-700 border-red-200 font-bold hover:bg-red-100"
+                            : "bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 border-slate-200"
+                        }`}
                       >
-                        @{handle}
+                        {item.label}
                       </button>
                     ))}
                   </div>
