@@ -1,4 +1,4 @@
-// Vidoor 1-Click In-Page Script for YouTube (VidIQ kabi YouTube ichida ishlash)
+// Vidoor 1-Click In-Page Script for YouTube (YouTube ichida to'g'ridan-to'g'ri ishlash)
 // Channel sahifalarida, Video sahifalarida (/watch) va qidiruvda ishlaydi!
 
 (function () {
@@ -216,7 +216,7 @@
     return null;
   }
 
-  // 3. VidIQ kabi joylashadigan nuqtani topish
+  // 3. YouTube sahifasida Vidoor joylashadigan nuqtani topish
   function findInsertionTarget() {
     // Agar video sahifasi bo'lsa:
     const videoTarget = document.querySelector('#below') || document.querySelector('ytd-watch-metadata') || document.querySelector('#primary-inner');

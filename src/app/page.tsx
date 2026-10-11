@@ -1556,15 +1556,15 @@ export default function HomePage() {
                     <span>🔴 YouTube'da Ochish ↗</span>
                   </a>
 
-                  {/* VIDIQ KABI YOUTUBE ICHIDA KO'RISH */}
+                  {/* VIDOOR BILAN YOUTUBE ICHIDA KO'RISH */}
                   <button
                     type="button"
                     onClick={() => { setShowExtensionModal(true); setExtensionTab("bookmarklet"); }}
                     className="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs flex items-center space-x-2 shadow-lg shadow-orange-500/20 transition cursor-pointer"
-                    title="YouTube sahifasiga VidIQ kabi qo'shish"
+                    title="YouTube sahifasiga Vidoor panelini ulash"
                   >
                     <Zap className="w-4 h-4 fill-white" />
-                    <span>⚡ YouTube'da VidIQ Kabi Ko'rish</span>
+                    <span>⚡ YouTube'da Vidoor Tahlilini Ko'rish</span>
                   </button>
 
                   {/* YOUTUBE STUDIO */}
@@ -1590,13 +1590,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* 1.5. VIDIQ-STYLE AUDIT & TREND G'OYALAR PANELI */}
+              {/* 1.5. VIDOOR AUDIT & TREND G'OYALAR PANELI */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Audit Ball */}
                 <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-slate-900 border-2 border-emerald-500/40 text-white shadow-xl flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black uppercase tracking-wider text-emerald-400">Kanal Salomatlik Auditi</span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30">VidIQ Score</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30">Vidoor Score</span>
                   </div>
                   <div className="my-3 flex items-baseline gap-2">
                     <span className="text-4xl sm:text-5xl font-black text-emerald-400">88</span>
@@ -1609,12 +1609,12 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Kunlik Trend G'oyalar (Daily Ideas like VidIQ) */}
+                {/* Kunlik Trend G'oyalar (Vidoor Daily Ideas) */}
                 <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 text-white shadow-xl space-y-3 md:col-span-2 flex flex-col justify-between">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                     <span className="text-xs font-black uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-orange-400" />
-                      <span>AI Kunlik Video G'oyalari (VidIQ Daily Ideas)</span>
+                      <span>AI Kunlik Video G'oyalari (Vidoor Daily Ideas)</span>
                     </span>
                     <span className="text-[10px] font-bold text-slate-400">Bugungi trendlar</span>
                   </div>

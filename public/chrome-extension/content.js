@@ -1,5 +1,5 @@
 // Vidoor Chrome Extension Content Script
-// Injects Vidoor Scorecard & Quick channel stats directly into YouTube pages (VidIQ kabi)
+// Injects Vidoor Scorecard & Quick channel stats directly into YouTube pages
 
 (function () {
   let lastProcessedChannel = "";
