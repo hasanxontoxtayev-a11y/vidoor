@@ -6,9 +6,9 @@ Davom etish uchun sun'iy intellekt yordamchingizga **"keyingi qadam"** deb yozis
 ---
 
 ## Step 0 — Hisoblar va asboblarni tayyorlash
-- [ ] Bepul hisoblarni ochish: **GitHub**, **Vercel** va **Supabase**.
-- [ ] Kompyuterni tekshirish: Git, Node.js va Antigravity to'liq tayyor.
-- [ ] GitHub-da `vidoor` nomli yangi bo'sh repozitoriy (ombor) yaratish.
+- [x] Bepul hisoblarni ochish: **GitHub**, **Vercel** va **Supabase**.
+- [x] Kompyuterni tekshirish: Git, Node.js va Antigravity to'liq tayyor.
+- [x] GitHub-da `vidoor` nomli yangi bo'sh repozitoriy (ombor) yaratish.
 **Nimani o'rganasiz:** Repozitoriy (repo) nima va nega dasturchilar o'z kodlarini GitHub-da saqlaydi.  
 **Qanday tekshirasiz:** `github.com` saytida o'zingizning yangi `vidoor` repozitoriyangizni ko'rasiz.
 
