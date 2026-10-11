@@ -15,9 +15,9 @@ Davom etish uchun sun'iy intellekt yordamchingizga **"keyingi qadam"** deb yozis
 ---
 
 ## Step 1 — "Salom Vidoor" sahifasini internetda jonli e'lon qilish
-- [ ] Next.js va Tailwind CSS yordamida Vidoor loyihasining boshlang'ich poydevorini qurish.
-- [ ] Yashil va Oranje ranglar bilan chiroyli "Vidoor — YouTube Blogerlar Yordamchisi" deb yozilgan bosh sahifani chiqarish.
-- [ ] Kodni GitHub-ga saqlash va Vercel-ga ulab internetda jonli ishga tushirish.
+- [x] Next.js va Tailwind CSS yordamida Vidoor loyihasining boshlang'ich poydevorini qurish.
+- [x] Yashil va Oranje ranglar bilan chiroyli "Vidoor — YouTube Blogerlar Yordamchisi" deb yozilgan bosh sahifani chiqarish.
+- [x] Kodni GitHub-ga saqlash va Vercel-ga ulab internetda jonli ishga tushirish.
 **Nimani o'rganasiz:** Deploy nima va qanday qilib o'z kompyuteringizdagi kod butun dunyoga ko'rinadigan veb-saytga aylanadi.  
 **Qanday tekshirasiz:** Brauzerda shaxsiy `vidoor.vercel.app` havolangizni ochib, sayt ishlayotganini ko'rasiz.
 
