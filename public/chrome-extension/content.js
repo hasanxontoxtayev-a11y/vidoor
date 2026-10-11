@@ -46,37 +46,34 @@
   }
 
   function findInsertionTarget() {
-    // Video sahifasi uchun:
-    const videoTarget = document.querySelector('#below') || document.querySelector('ytd-watch-metadata') || document.querySelector('#primary-inner');
-    if (videoTarget) return { element: videoTarget, isVideo: true };
+    const isWatch = window.location.pathname.includes('/watch') || window.location.search.includes('v=');
 
-    // Kanal sahifasi uchun:
-    const channelTarget = (
-      document.querySelector('yt-page-header-renderer') ||
-      document.querySelector('#page-header') ||
-      document.querySelector('ytd-c4-tabbed-header-renderer') ||
-      document.querySelector('#channel-container') ||
-      document.querySelector('ytd-tabbed-page-header')
-    );
-    if (channelTarget) return { element: channelTarget, isVideo: false };
+    if (isWatch) {
+      const videoTarget = document.querySelector('ytd-watch-metadata') || document.querySelector('#below') || document.querySelector('#primary-inner');
+      if (videoTarget) return { element: videoTarget, isVideo: true };
+    } else {
+      // Kanal sahifasi uchun eng yaxshi joy:
+      const channelTarget = (
+        document.querySelector('ytd-two-column-browse-results-renderer') ||
+        document.querySelector('#tabsContainer') ||
+        document.querySelector('ytd-tabbed-page-header') ||
+        document.querySelector('yt-page-header-renderer') ||
+        document.querySelector('#channel-container') ||
+        document.querySelector('ytd-browse[page-subtype="channels"]')
+      );
+      if (channelTarget) return { element: channelTarget, isVideo: false };
+    }
 
-    return null;
+    const fallback = document.querySelector('ytd-app #content') || document.querySelector('ytd-app') || document.body;
+    return { element: fallback, isVideo: false, isFallback: true };
   }
 
   async function injectVidoorWidget() {
     const channelQuery = detectChannel();
     if (!channelQuery) return;
 
-    if (isProcessing && channelQuery === lastProcessedChannel) return;
-    lastProcessedChannel = channelQuery;
-    isProcessing = true;
-
     const targetInfo = findInsertionTarget();
-    if (!targetInfo) {
-      setTimeout(injectVidoorWidget, 500);
-      isProcessing = false;
-      return;
-    }
+    if (!targetInfo) return;
 
     let container = document.getElementById('vidoor-injected-stats');
     if (!container) {
@@ -84,12 +81,14 @@
       container.id = 'vidoor-injected-stats';
       container.className = 'vidoor-injected-container';
 
-      if (targetInfo.isVideo) {
+      if (targetInfo.isVideo && targetInfo.element.parentNode) {
         targetInfo.element.parentNode.insertBefore(container, targetInfo.element);
-      } else if (targetInfo.element.nextSibling) {
-        targetInfo.element.parentNode.insertBefore(container, targetInfo.element.nextSibling);
+      } else if (targetInfo.isFallback && targetInfo.element) {
+        targetInfo.element.insertBefore(container, targetInfo.element.firstChild);
+      } else if (targetInfo.element && targetInfo.element.parentNode) {
+        targetInfo.element.parentNode.insertBefore(container, targetInfo.element);
       } else {
-        targetInfo.element.parentNode.appendChild(container);
+        document.body.appendChild(container);
       }
     }
 
