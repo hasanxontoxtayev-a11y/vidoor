@@ -1619,10 +1619,10 @@ export default function HomePage() {
                       Ushbu tugmani Xatcho'plar paneliga sudrab qo'ying (yoki bosing) 👇
                     </span>
                     <a
-                      href="javascript:(function(){var s=document.createElement('script');s.src='https://vidoor.vercel.app/vidoor-inpage.js?t='+Date.now();document.body.appendChild(s);})();"
+                      href="javascript:(function(){var s=document.createElement('script');s.src='https://vidoor.vercel.app/api/vidoor-inpage?t='+Date.now();document.body.appendChild(s);})();"
                       onClick={(e) => {
                         e.preventDefault();
-                        navigator.clipboard.writeText("javascript:(function(){var s=document.createElement('script');s.src='https://vidoor.vercel.app/vidoor-inpage.js?t='+Date.now();document.body.appendChild(s);})();");
+                        navigator.clipboard.writeText("javascript:(function(){var s=document.createElement('script');s.src='https://vidoor.vercel.app/api/vidoor-inpage?t='+Date.now();document.body.appendChild(s);})();");
                         alert("Xatcho'p kodi nusxalandi! Endi Chrome xatcho'plariga qo'shib, YouTube'da (masalan, Xamdam Sobirov sahifasida) bosing!");
                       }}
                       draggable="true"
