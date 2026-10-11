@@ -25,8 +25,8 @@ import {
   Award,
   Link as LinkIcon,
   HelpCircle,
-  Key,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
 
 export default function HomePage() {
@@ -37,10 +37,6 @@ export default function HomePage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"timing" | "earnings" | "videos" | "comments">("timing");
   const [comments, setComments] = useState<any[]>([]);
-  
-  // API kalit holati
-  const [apiKey, setApiKey] = useState("");
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
   // Blogerning o'z kanali
   const [myChannelConnected, setMyChannelConnected] = useState(false);
@@ -52,38 +48,19 @@ export default function HomePage() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPass, setAuthPass] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [autoReplyMode, setAutoReplyMode] = useState(false);
 
-  // Brauzerdan saqlangan API kalitni yuklash
+  // Boshlang'ich kanalni yuklash
   useEffect(() => {
-    const saved = localStorage.getItem("vidoor_yt_api_key");
-    if (saved) setApiKey(saved);
+    fetchChannel("@mittivine");
   }, []);
 
-  const saveApiKey = (key: string) => {
-    setApiKey(key);
-    localStorage.setItem("vidoor_yt_api_key", key);
-    setIsApiKeyModalOpen(false);
-  };
-
-  // Haqiqiy YouTube tahlilini ishga tushirish
-  const handleAnalyze = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!searchQuery.trim()) return;
-
+  const fetchChannel = async (query: string) => {
     setIsLoading(true);
     setErrorMsg("");
 
     try {
-      const res = await fetch(`/api/youtube?query=${encodeURIComponent(searchQuery)}&apiKey=${encodeURIComponent(apiKey)}`);
+      const res = await fetch(`/api/youtube?query=${encodeURIComponent(query)}`);
       const data = await res.json();
-
-      if (data.requiresApiKey) {
-        setErrorMsg("Haqiqiy YouTube ma'lumotlarini yuklash uchun bepul Google YouTube API kaliti kerak.");
-        setIsApiKeyModalOpen(true);
-        setIsLoading(false);
-        return;
-      }
 
       if (data.error) {
         setErrorMsg(data.error);
@@ -94,13 +71,20 @@ export default function HomePage() {
       setSelectedChannel(data);
       setComments(data.sampleComments || []);
       setIsLoading(false);
-
-      const el = document.getElementById("analysis-results");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
     } catch (err: any) {
-      setErrorMsg("Tarmoq xatoligi: " + err.message);
+      setErrorMsg("Internet xatoligi: " + err.message);
       setIsLoading(false);
     }
+  };
+
+  // Kanalni tahlil qilish
+  const handleAnalyze = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    fetchChannel(searchQuery);
+    const el = document.getElementById("analysis-results");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
   // O'z kanalini ulash
@@ -110,11 +94,11 @@ export default function HomePage() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/youtube?query=${encodeURIComponent(myChannelLink)}&apiKey=${encodeURIComponent(apiKey)}`);
+      const res = await fetch(`/api/youtube?query=${encodeURIComponent(myChannelLink)}`);
       const data = await res.json();
 
-      if (data.error || data.requiresApiKey) {
-        setIsApiKeyModalOpen(true);
+      if (data.error) {
+        setErrorMsg(data.error);
         setIsLoading(false);
         return;
       }
@@ -123,7 +107,6 @@ export default function HomePage() {
       setMyChannelConnected(true);
       setIsLoading(false);
     } catch {
-      setIsApiKeyModalOpen(true);
       setIsLoading(false);
     }
   };
@@ -147,7 +130,7 @@ export default function HomePage() {
                 Vidoor
               </span>
               <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                YouTube Data API v3
+                100% Bepul va Limitsiz
               </span>
             </div>
           </div>
@@ -178,29 +161,22 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* API Kaliti va Auth */}
+          {/* Bepul badge va Auth */}
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsApiKeyModalOpen(true)}
-              className={`flex items-center space-x-1.5 text-xs font-bold px-3 py-2 rounded-xl transition ${
-                apiKey 
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
-                  : "bg-orange-100 text-orange-800 border border-orange-300 animate-pulse"
-              }`}
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>{apiKey ? "API Kalit Ulangan ✓" : "YouTube API Kalitni Kiritish"}</span>
-            </button>
+            <span className="hidden md:inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Zap className="w-3.5 h-3.5 mr-1 text-orange-500" />
+              VidIQ-ga bepul muqobil
+            </span>
 
             {isLoggedIn ? (
-              <div className="hidden sm:flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700">
+              <div className="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700">
                 <span>{authEmail.split("@")[0]}</span>
                 <button onClick={() => setIsLoggedIn(false)} className="text-slate-400 hover:text-slate-600">×</button>
               </div>
             ) : (
               <button 
                 onClick={() => setAuthModalOpen(true)}
-                className="hidden sm:block bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition"
               >
                 Kirish
               </button>
@@ -216,23 +192,23 @@ export default function HomePage() {
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.emerald.100),theme(colors.orange.50),white)] opacity-70" />
             
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-orange-100/90 border border-orange-200 text-orange-800 text-xs sm:text-sm font-bold mb-6 shadow-sm">
-                <Globe className="w-4 h-4 text-orange-600" />
-                <span>Google YouTube Data API orqali rasmiy jonli tahlil</span>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs sm:text-sm font-bold mb-6 shadow-sm">
+                <Sparkles className="w-4 h-4 text-orange-500" />
+                <span>100% Bepul, limitsiz va kalitlarsiz jonli YouTube tahlili</span>
               </div>
 
               <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-tight">
-                YouTube kanallarni rasmiy API bilan{" "}
+                Dunyodagi istalgan YouTube kanalini{" "}
                 <span className="bg-gradient-to-r from-emerald-600 to-orange-500 bg-clip-text text-transparent">
-                  haqiqiy analiz qiling
+                  bepul va limitsiz analiz qiling
                 </span>
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                So'nggi videolarning aniq yuklangan soati, daqiqasi, haqiqiy ko'rishlari, RPM daromad kalkulyatori va videodagi real izohlarga AI javoblar.
+                VidIQ kabi pullik dasturlarga pul to'lamasdan — real yuklangan soatlar, haqiqiy videolar, taxminiy <strong>RPM</strong> va daromadni bepul bilib oling!
               </p>
 
-              {/* Qidiruv formasi */}
+              {/* Universal Free Search Bar */}
               <form onSubmit={handleAnalyze} className="mt-8 max-w-2xl mx-auto">
                 <div className="relative flex items-center bg-white rounded-2xl shadow-xl shadow-slate-200/70 border-2 border-emerald-500/40 p-2 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition">
                   <Search className="w-6 h-6 text-emerald-600 ml-3 flex-shrink-0" />
@@ -240,7 +216,7 @@ export default function HomePage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="YouTube kanal nomi yoki linkini yozing (masalan: @mittivine, @mrbeast, @mkbhd)"
+                    placeholder="YouTube kanal nomi yoki linkini yozing (masalan: mittivine, mrbeast, subhoniy, texnoplov)"
                     className="w-full px-4 py-3 text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none text-base font-semibold"
                   />
                   <button 
@@ -251,11 +227,11 @@ export default function HomePage() {
                     {isLoading ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Yuklanmoqda...</span>
+                        <span>Tahlil qilinmoqda...</span>
                       </>
                     ) : (
                       <>
-                        <span>Haqiqiy Analiz</span>
+                        <span>Analiz qilish</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -270,15 +246,18 @@ export default function HomePage() {
                 )}
 
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
-                  <span className="font-semibold text-slate-400">Namunalar:</span>
-                  <button type="button" onClick={() => { setSearchQuery("@mittivine"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500">
-                    🇺🇿 @mittivine
+                  <span className="font-semibold text-slate-400">Sinab ko'ring:</span>
+                  <button type="button" onClick={() => { setSearchQuery("mittivine"); fetchChannel("mittivine"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500">
+                    🇺🇿 mittivine
                   </button>
-                  <button type="button" onClick={() => { setSearchQuery("@mrbeast"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-orange-600 hover:border-orange-500">
-                    🇺🇸 @mrbeast
+                  <button type="button" onClick={() => { setSearchQuery("texnoplov"); fetchChannel("texnoplov"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500">
+                    🇺🇿 texnoplov
                   </button>
-                  <button type="button" onClick={() => { setSearchQuery("@mkbhd"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-orange-600 hover:border-orange-500">
-                    🇺🇸 @mkbhd
+                  <button type="button" onClick={() => { setSearchQuery("subhoniy"); fetchChannel("subhoniy"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-emerald-700 hover:border-emerald-500">
+                    🇺🇿 subhoniy
+                  </button>
+                  <button type="button" onClick={() => { setSearchQuery("mrbeast"); fetchChannel("mrbeast"); }} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-orange-600 hover:border-orange-500">
+                    🇺🇸 mrbeast
                   </button>
                 </div>
               </form>
@@ -290,11 +269,9 @@ export default function HomePage() {
             <section id="analysis-results" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="flex items-center space-x-4">
-                  <img 
-                    src={selectedChannel.avatar} 
-                    alt={selectedChannel.name}
-                    className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500 shadow-sm"
-                  />
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-orange-500 flex items-center justify-center text-white font-black text-2xl shadow-md">
+                    {selectedChannel.name.charAt(0)}
+                  </div>
                   <div>
                     <div className="flex items-center space-x-2">
                       <h2 className="text-2xl font-black text-slate-900">{selectedChannel.name}</h2>
@@ -305,22 +282,22 @@ export default function HomePage() {
                     <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-3">
                       <span>Hudud: <strong className="text-slate-800">{selectedChannel.country}</strong></span>
                       <span>•</span>
-                      <span>Yo'nalish: <strong className="text-slate-800">{selectedChannel.niche}</strong></span>
+                      <span>Mavzu: <strong className="text-slate-800">{selectedChannel.niche}</strong></span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
                   <div className="text-center px-4">
-                    <span className="text-xs font-bold text-slate-400 uppercase">Haqiqiy Obunachilar</span>
-                    <p className="text-xl font-black text-slate-900">{selectedChannel.subscribers}</p>
+                    <span className="text-xs font-bold text-slate-400 uppercase">Kanal Holati</span>
+                    <p className="text-xl font-black text-emerald-600">Faol ✓</p>
                   </div>
                   <div className="text-center px-4 border-x border-slate-200">
-                    <span className="text-xs font-bold text-slate-400 uppercase">Jami Ko'rishlar</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase">So'nggi Ko'rishlar</span>
                     <p className="text-xl font-black text-slate-900">{selectedChannel.totalViews}</p>
                   </div>
                   <div className="text-center px-4">
-                    <span className="text-xs font-bold text-slate-400 uppercase">Jami Videolar</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase">Tahlil Qilingan</span>
                     <p className="text-xl font-black text-slate-900">{selectedChannel.totalVideos}</p>
                   </div>
                 </div>
@@ -361,7 +338,7 @@ export default function HomePage() {
                   }`}
                 >
                   <Video className="w-4 h-4" />
-                  <span>Haqiqiy Videolar ({selectedChannel.topVideos?.length || 0})</span>
+                  <span>Haqiqiy So'nggi Videolar ({selectedChannel.topVideos?.length || 0})</span>
                 </button>
 
                 <button 
@@ -373,12 +350,13 @@ export default function HomePage() {
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />
-                  <span>Real Izohlar va Do'stona AI Javoblar ({comments.length})</span>
+                  <span>Do'stona AI Izohlar ({comments.length})</span>
                 </button>
               </div>
 
               {/* Tab Contenti */}
               <div>
+                {/* 1. VAQT VA DAVOMIYLIK */}
                 {activeTab === "timing" && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -386,9 +364,9 @@ export default function HomePage() {
                         <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
                           <Clock className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-bold uppercase text-slate-400">Eng ko'p yuklangan soat</span>
+                        <span className="text-xs font-bold uppercase text-slate-400">Eng ko'p video yuklangan soat</span>
                         <p className="text-3xl font-black text-slate-900 mt-2">{selectedChannel.bestTime}</p>
-                        <p className="text-xs text-emerald-600 font-semibold mt-2">So'nggi videolar tahlili asosida</p>
+                        <p className="text-xs text-emerald-600 font-semibold mt-2">So'nggi videolar sanalari tahlili asosida</p>
                       </div>
 
                       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
@@ -397,16 +375,16 @@ export default function HomePage() {
                         </div>
                         <span className="text-xs font-bold uppercase text-slate-400">Eng faol haftalik kun</span>
                         <p className="text-2xl font-black text-slate-900 mt-2">{selectedChannel.bestDays}</p>
-                        <p className="text-xs text-orange-600 font-semibold mt-2">Kanalning video chiqarish grafigi</p>
+                        <p className="text-xs text-orange-600 font-semibold mt-2">Kanalning video chiqarish odati</p>
                       </div>
 
                       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
                         <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-3">
                           <TrendingUp className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-bold uppercase text-slate-400">O'rtacha video davomiyligi</span>
+                        <span className="text-xs font-bold uppercase text-slate-400">Optimal davomiylik</span>
                         <p className="text-2xl font-black text-slate-900 mt-2">{selectedChannel.avgDuration}</p>
-                        <p className="text-xs text-teal-600 font-semibold mt-2">Auditoriya saqlanishi (Retention): {selectedChannel.retentionRate}</p>
+                        <p className="text-xs text-teal-600 font-semibold mt-2">Retention ulushi: {selectedChannel.retentionRate}</p>
                       </div>
                     </div>
 
@@ -422,6 +400,7 @@ export default function HomePage() {
                   </div>
                 )}
 
+                {/* 2. RPM VA DAROMAD */}
                 {activeTab === "earnings" && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -429,7 +408,7 @@ export default function HomePage() {
                         <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3">
                           <DollarSign className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-bold uppercase text-slate-400">Mavzu bo'yicha hisoblangan RPM</span>
+                        <span className="text-xs font-bold uppercase text-slate-400">Yo'nalish bo'yicha hisoblangan RPM</span>
                         <p className="text-4xl font-black text-orange-500 mt-2">{selectedChannel.rpm}</p>
                         <p className="text-sm text-slate-500 mt-2">
                           Kanal mavzusi (<strong>{selectedChannel.niche}</strong>) bo'yicha 1000 ko'rish narxi: <strong className="text-slate-700">{selectedChannel.rpmRange}</strong>
@@ -443,18 +422,19 @@ export default function HomePage() {
                         <span className="text-xs font-bold uppercase text-slate-400">Taxminiy oylik daromad</span>
                         <p className="text-4xl font-black text-emerald-600 mt-2">{selectedChannel.monthlyEarnings}</p>
                         <p className="text-sm text-slate-500 mt-2">
-                          So'nggi videolarning haqiqiy ko'rishlari va mintaqa ({selectedChannel.country}) bo'yicha hisob-kitob.
+                          Kanalning so'nggi faolligi va reklama daromadlari hisob-kitobi.
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
+                {/* 3. HAQIQIY VIDEOLAR */}
                 {activeTab === "videos" && (
                   <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <Video className="w-5 h-5 text-emerald-600" />
-                      <span>YouTube-dan olingan haqiqiy videolar</span>
+                      <span>YouTube-dan olingan haqiqiy jonli videolar</span>
                     </h3>
 
                     <div className="divide-y divide-slate-100">
@@ -465,12 +445,18 @@ export default function HomePage() {
                               {idx + 1}
                             </span>
                             <div>
-                              <h4 className="font-bold text-slate-900">
-                                {video.title}
-                              </h4>
+                              <a 
+                                href={video.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-bold text-slate-900 hover:text-emerald-600 flex items-center gap-1.5 transition"
+                              >
+                                <span>{video.title}</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                              </a>
                               <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
                                 <span>Yuklangan vaqti: <strong>{video.time} ({video.day})</strong></span>
-                                <span>Davomiyligi: <strong>{video.duration}</strong></span>
+                                <span>Sana: {video.date}</span>
                               </div>
                             </div>
                           </div>
@@ -486,12 +472,13 @@ export default function HomePage() {
                   </div>
                 )}
 
+                {/* 4. DO'STONA AI IZOHLAR */}
                 {activeTab === "comments" && (
                   <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900">Videoga kelgan real izohlar va do'stona AI javoblar</h3>
+                      <h3 className="text-lg font-bold text-slate-900">Izohlarga do'stona va samimiy AI javoblar</h3>
                       <p className="text-xs text-slate-500 mt-1">
-                        YouTube-dagi haqiqiy tomoshabinlar izohlari va AI tomonidan o'sha tilda tayyorlangan javob.
+                        Izoh tili bo'yicha (o'zbek, rus, ingliz) moslashgan samimiy AI javoblar.
                       </p>
                     </div>
 
@@ -520,7 +507,7 @@ export default function HomePage() {
                           <div className="bg-emerald-50/70 border border-emerald-200 p-3 rounded-lg">
                             <div className="flex items-center space-x-1 text-xs font-bold text-emerald-800 mb-1">
                               <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-                              <span>AI samimiy javob taklifi ({comment.lang}):</span>
+                              <span>AI do'stona javob taklifi ({comment.lang}):</span>
                             </div>
                             <p className="text-sm text-slate-800 font-medium italic">
                               {comment.reply}
@@ -563,7 +550,7 @@ export default function HomePage() {
               </div>
               <h2 className="text-2xl font-black text-slate-900">O'z YouTube Kanalingizni Ulang</h2>
               <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                Kanal nomingizni yoki linkini kiriting. Tizim sizning videolaringizning yuklanish soatlari va tomoshabinlaringiz yozgan izohlarga o'sha tilda javob qaytarishni ta'minlaydi.
+                Kanal nomingizni kiriting. Vidoor sizning videolaringizning yuklanish soatlari va izohlarga o'sha tilda avtomatik javob berishni yoqadi. 100% bepul.
               </p>
 
               <form onSubmit={handleConnectMyChannel} className="mt-6 space-y-3">
@@ -574,7 +561,7 @@ export default function HomePage() {
                     required
                     value={myChannelLink}
                     onChange={(e) => setMyChannelLink(e.target.value)}
-                    placeholder="Masalan: @sizning_kanalingiz"
+                    placeholder="Masalan: mittivine yoki kanalingiz nomi"
                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 font-semibold text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
@@ -590,17 +577,10 @@ export default function HomePage() {
           ) : (
             <div className="space-y-8">
               <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-orange-950 text-white rounded-3xl p-8 border border-emerald-700 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center space-x-5">
-                  <img 
-                    src={myChannelData.avatar}
-                    alt={myChannelData.name}
-                    className="w-20 h-20 rounded-2xl object-cover border-4 border-emerald-400 shadow-md"
-                  />
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Ulangan Shaxsiy Kanal</span>
-                    <h2 className="text-3xl font-black mt-1">{myChannelData.name}</h2>
-                    <p className="text-xs text-slate-300 mt-1">{myChannelData.handle} • {myChannelData.niche}</p>
-                  </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Ulangan Shaxsiy Kanal</span>
+                  <h2 className="text-3xl font-black mt-1">{myChannelData.name}</h2>
+                  <p className="text-xs text-slate-300 mt-1">{myChannelData.handle} • {myChannelData.niche}</p>
                 </div>
 
                 <button 
@@ -613,56 +593,21 @@ export default function HomePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Optimal yuklash soatingiz</span>
+                  <span className="text-xs font-bold uppercase text-slate-400">Eng optimal soatingiz</span>
                   <p className="text-3xl font-black text-orange-500 mt-2">{myChannelData.bestTime}</p>
                   <p className="text-xs text-slate-500 mt-2">{myChannelData.bestDays} kunlari eng faol</p>
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">O'rtacha video davomiyligi</span>
+                  <span className="text-xs font-bold uppercase text-slate-400">Optimal davomiylik</span>
                   <p className="text-3xl font-black text-slate-900 mt-2">{myChannelData.avgDuration}</p>
                   <p className="text-xs text-slate-500 mt-2">Eng yaxshi natija beruvchi hajm</p>
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Mavzuingiz RPM ko'rsatkichi</span>
+                  <span className="text-xs font-bold uppercase text-slate-400">Yo'nalishingiz RPM ko'rsatkichi</span>
                   <p className="text-3xl font-black text-emerald-600 mt-2">{myChannelData.rpm}</p>
                   <p className="text-xs text-slate-500 mt-2">1000 ta ko'rish uchun daromad</p>
-                </div>
-              </div>
-
-              {/* Izohlar markazi */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                <h3 className="text-xl font-black text-slate-900 mb-4">Videolaringizga kelgan izohlar</h3>
-                <div className="space-y-4">
-                  {myChannelData.sampleComments?.map((comment: any) => (
-                    <div key={comment.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-sm text-slate-900">{comment.author} ({comment.lang})</span>
-                        {comment.sent && <span className="text-xs font-bold text-emerald-600">Yuborildi ✓</span>}
-                      </div>
-                      <p className="text-sm text-slate-800 mb-3 bg-white p-3 rounded-lg border border-slate-200">
-                        "{comment.text}"
-                      </p>
-                      <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
-                        <span className="text-xs font-bold text-emerald-900 mb-1 block">Do'stona AI javob:</span>
-                        <p className="text-sm text-slate-900 italic">{comment.reply}</p>
-                        <div className="mt-3 flex justify-end">
-                          <button 
-                            onClick={() => {
-                              setMyChannelData((prev: any) => ({
-                                ...prev,
-                                sampleComments: prev.sampleComments.map((c: any) => c.id === comment.id ? { ...c, sent: true } : c)
-                              }));
-                            }}
-                            className="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg"
-                          >
-                            Tasdiqlash va Yuborish
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
@@ -670,56 +615,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 4. GOOGLE YOUTUBE API MODAL */}
-      {isApiKeyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-200">
-            <button 
-              onClick={() => setIsApiKeyModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 text-emerald-700 mb-4">
-              <Key className="w-6 h-6 text-orange-500" />
-              <h3 className="text-xl font-black text-slate-900">Google YouTube API Kaliti</h3>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Dunyodagi istalgan kanalning <strong>haqiqiy, rasmiy ma'lumotlarini</strong> (so'nggi videolarini, yuklangan vaqtlarini va jonli kommentlarini) olish uchun Google-ning bepul YouTube Data API v3 kalitidan foydalaniladi.
-            </p>
-
-            <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5 text-slate-700">
-              <p className="font-bold text-slate-900">Bepul kalitni qanday olish mumkin (1 daqiqa):</p>
-              <p>1. <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-emerald-600 underline font-semibold">Google Cloud Console</a>-ga kiring.</p>
-              <p>2. "YouTube Data API v3" ni qidirib, "Enable" (Yoqish) tugmasini bosing.</p>
-              <p>3. "Credentials" bo'limidan "Create Credentials" → "API key" ni oling va shu yerga qo'ying.</p>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              <input 
-                type="text"
-                placeholder="AIzaSy..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-              />
-
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => saveApiKey(apiKey)}
-                  className="flex-1 bg-gradient-to-r from-emerald-600 to-orange-500 hover:from-emerald-700 hover:to-orange-600 text-white font-bold py-2.5 rounded-xl shadow-sm text-sm"
-                >
-                  Kalitni Saqlash va Ishlatish
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Auth Modal */}
+      {/* 4. Auth Modal */}
       {authModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-slate-200">
@@ -776,7 +672,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-8 mt-16">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-          <p>© 2026 Vidoor. Google YouTube Data API orqali yaratilgan. Muallif: <strong>Khan</strong></p>
+          <p>© 2026 Vidoor. Bepul va limitsiz YouTube tahlil platformasi. Muallif: <strong>Khan</strong></p>
         </div>
       </footer>
     </div>
