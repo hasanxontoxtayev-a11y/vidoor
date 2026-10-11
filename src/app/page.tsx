@@ -63,7 +63,7 @@ export default function HomePage() {
 
   // Chrome Kengaytmasi va Tezkor Kirish modali
   const [showExtensionModal, setShowExtensionModal] = useState(false);
-  const [extensionTab, setExtensionTab] = useState<"bookmarklet" | "extension" | "pwa" | "search">("bookmarklet");
+  const [extensionTab, setExtensionTab] = useState<"bookmarklet" | "chrome-home" | "extension" | "pwa" | "search">("bookmarklet");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
 
@@ -1094,6 +1094,16 @@ export default function HomePage() {
                 ⚡ 1. Tezkor Xatcho'p (Eng osoni)
               </button>
               <button
+                onClick={() => setExtensionTab("chrome-home")}
+                className={`pb-3 px-3 text-xs font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                  extensionTab === "chrome-home"
+                    ? "border-emerald-500 text-emerald-700"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                ⭐ 2. Chrome Bosh Sahifasida 1-o'rinda turish
+              </button>
+              <button
                 onClick={() => setExtensionTab("extension")}
                 className={`pb-3 px-3 text-xs font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
                   extensionTab === "extension"
@@ -1101,7 +1111,7 @@ export default function HomePage() {
                     : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                🧩 2. Chrome Kengaytmasi
+                🧩 3. Chrome Kengaytmasi
               </button>
               <button
                 onClick={() => setExtensionTab("pwa")}
@@ -1111,7 +1121,7 @@ export default function HomePage() {
                     : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                📱 3. Ilovani O'rnatish
+                📱 4. Ilovani O'rnatish
               </button>
               <button
                 onClick={() => setExtensionTab("search")}
@@ -1121,7 +1131,7 @@ export default function HomePage() {
                     : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                🔍 4. Google & Chrome Qidiruvi
+                🔍 5. Google & Chrome Qidiruvi
               </button>
             </div>
 
@@ -1172,7 +1182,84 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* TAB 2: CHROME EXTENSION */}
+              {/* TAB 2: CHROME BOSH SAHIFASIDA 1-O'RINDA TURISH (SHORTCUTS) */}
+              {extensionTab === "chrome-home" && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start space-x-3">
+                    <Star className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5 fill-amber-500" />
+                    <div>
+                      <h4 className="text-sm font-black text-amber-900">
+                        Chrome Bosh Sahifasida (Yangi Oynada) 1-O'rinda Ajralib Turish
+                      </h4>
+                      <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                        Kompyuteringizda Google Chrome ochilganida, YouTube va Google yonida <strong>Vidoor ⚡</strong> eng birinchi yorliq bo'lib turishi uchun 30 soniyada qo'shib oling.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 text-white p-5 rounded-2xl space-y-4 border border-slate-800">
+                    <span className="text-xs font-bold text-emerald-400 block uppercase tracking-wider">
+                      Kompyuter Chrome'iga Qo'shish Qadamlari:
+                    </span>
+                    <div className="space-y-3 text-xs">
+                      <div className="flex items-start space-x-3">
+                        <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-xs border border-emerald-500/30">1</span>
+                        <div>
+                          <p className="font-semibold text-slate-100">Chrome'da yangi oyna oching:</p>
+                          <p className="text-slate-400 mt-0.5">Klaviaturada <kbd className="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded border border-slate-700 font-mono">Ctrl + T</kbd> tugmalarini bosing.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3">
+                        <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-xs border border-emerald-500/30">2</span>
+                        <div>
+                          <p className="font-semibold text-slate-100">"+ Yorliq qo'shish" (+ Add shortcut) tugmasini bosing:</p>
+                          <p className="text-slate-400 mt-0.5">Qidiruv qatori ostidagi aylana "+" tugmasini bosing.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3">
+                        <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-xs border border-emerald-500/30">3</span>
+                        <div className="space-y-1.5 w-full">
+                          <p className="font-semibold text-slate-100">Ma'lumotlarni kiriting:</p>
+                          <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400 text-[11px]">Nom (Name): <strong className="text-white">Vidoor ⚡ (VidIQ)</strong></span>
+                              <button
+                                onClick={() => handleCopy("Vidoor ⚡ (VidIQ)", "copy-name")}
+                                className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 text-[10px] font-bold cursor-pointer"
+                              >
+                                {copiedId === "copy-name" ? "Nusxalandi! ✓" : "Nusxalash"}
+                              </button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400 text-[11px]">URL (Link): <strong className="text-white">https://vidoor.vercel.app</strong></span>
+                              <button
+                                onClick={() => handleCopy("https://vidoor.vercel.app", "copy-url")}
+                                className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 text-[10px] font-bold cursor-pointer"
+                              >
+                                {copiedId === "copy-url" ? "Nusxalandi! ✓" : "Nusxalash"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-xs space-y-2">
+                    <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <Laptop className="w-4 h-4 text-emerald-600" />
+                      Windows Ish Stoliga (Desktop) Alohida Dastur Yorlig'ini Chiqarish:
+                    </span>
+                    <p className="text-slate-600 leading-relaxed">
+                      Chrome'ning o'ng yuqori burchagidagi <strong>3 ta nuqta (⋮)</strong> menyusini bosing &rarr; <strong>"Translyatsiya, saqlash va ulashish"</strong> (yoki "Boshqa vositalar") &rarr; <strong>"Yorliq yaratish..." (Create shortcut...)</strong> tugmasini bosing. Shunda kompyuteringiz ish stolida Vidoor alohida dastur ikonkasi bo'lib chiqadi!
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: CHROME EXTENSION */}
               {extensionTab === "extension" && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200 flex items-start space-x-3">

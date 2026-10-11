@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
-  <ShortName>Vidoor</ShortName>
-  <Description>YouTube kanallar daromadi va analitikasini qidirish</Description>
+  <ShortName>Vidoor ⚡</ShortName>
+  <Description>YouTube kanallar oylik daromadi va VidIQ tahlilini qidirish</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Url type="text/html" template="https://vidoor.vercel.app/?q={searchTerms}"/>
+  <Image width="16" height="16" type="image/x-icon">https://vidoor.vercel.app/favicon.ico</Image>
+  <Image width="192" height="192" type="image/png">https://vidoor.vercel.app/icon-192.png</Image>
+  <Url type="text/html" method="get" template="https://vidoor.vercel.app/?q={searchTerms}"/>
 </OpenSearchDescription>
