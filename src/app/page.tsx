@@ -841,24 +841,78 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Shaxsiy kanal ko'rsatkichlari */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">1 Oylik Daromadingiz (VidIQ)</span>
-                  <p className="text-3xl font-black text-emerald-600 mt-2">{myChannelData.estMonthlyEarningsMain}</p>
-                  <p className="text-xs text-slate-500 mt-2">Oraliq: {myChannelData.estMonthlyRange}</p>
+              {/* VidIQ Quick channel stats Vidjeti (Shaxsiy Kanal uchun) */}
+              <div className="bg-[#0f172a] text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl font-black tracking-tight text-white flex items-center">
+                      <span className="text-sky-400">vid</span>IQ
+                    </span>
+                    <span className="text-sm font-bold text-slate-300 ml-2">Quick channel stats (Kanalingiz ko'rsatkichlari)</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Haqiqiy YouTube ma'lumotlari</span>
+                  </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Optimal yuklash soatingiz</span>
-                  <p className="text-3xl font-black text-orange-500 mt-2">{myChannelData.bestTime}</p>
-                  <p className="text-xs text-slate-500 mt-2">{myChannelData.bestDays} kunlari auditoriya eng faol</p>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {/* 1. Views gained (7 days) */}
+                  <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs font-medium text-slate-400">Views gained (7 days)</span>
+                    <div className="mt-3">
+                      <p className="text-2xl font-black text-white">{myChannelData.viewsGained7Days}</p>
+                      <span className="inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Haftalik faollik
+                      </span>
+                    </div>
+                  </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                  <span className="text-xs font-bold uppercase text-slate-400">Upload frequency</span>
-                  <p className="text-2xl font-black text-slate-900 mt-2">{myChannelData.uploadFrequency}</p>
-                  <p className="text-xs text-slate-500 mt-2">O'rtacha uzunlik: {myChannelData.avgVideoLength}</p>
+                  {/* 2. Obunachilar */}
+                  <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs font-medium text-slate-400">Obunachilar</span>
+                    <div className="mt-3">
+                      <p className="text-2xl font-black text-white">{myChannelData.subscribers}</p>
+                      <span className="text-[11px] text-slate-400 font-medium block mt-1">
+                        {myChannelData.channelRank}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 3. Est. monthly earnings */}
+                  <div className="bg-gradient-to-br from-emerald-950/80 to-slate-900 border-2 border-emerald-500/50 rounded-2xl p-4 flex flex-col justify-between shadow-lg shadow-emerald-950/40">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Est. monthly earnings</span>
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-2xl sm:text-3xl font-black text-emerald-400">
+                        {myChannelData.estMonthlyEarningsMain}
+                      </p>
+                      <span className="inline-block mt-1 text-xs font-bold text-slate-200">
+                        {myChannelData.estMonthlyRange} ({myChannelData.estMonthlyDollars})
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 4. Avg. video length */}
+                  <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs font-medium text-slate-400">Avg. video length</span>
+                    <div className="mt-3">
+                      <p className="text-2xl font-black text-white">{myChannelData.avgVideoLength}</p>
+                      <span className="text-[11px] text-slate-400 block mt-1">O'rtacha davomiylik</span>
+                    </div>
+                  </div>
+
+                  {/* 5. Upload frequency */}
+                  <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs font-medium text-slate-400">Upload frequency</span>
+                    <div className="mt-3">
+                      <p className="text-xl font-black text-white">{myChannelData.uploadFrequency}</p>
+                      <span className="text-[11px] text-slate-400 block mt-1">Yuklash chastotasi</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
